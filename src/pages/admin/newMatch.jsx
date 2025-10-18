@@ -1,73 +1,49 @@
-// src/pages/admin/NewMatch.jsx
-import React, { useState } from "react";
 import Card from "../../components/layout/Card";
 import Form from "../../components/ui/Form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 
+// Schéma de validation avec Yup
+const schema = yup.object({
+  homeTeam: yup.string().required("Équipe à domicile requise"),
+  awayTeam: yup.string().required("Équipe à l'extérieur requise"),
+  matchDate: yup
+    .date()
+    .typeError("Veuillez entrer une date valide")
+    .min(new Date(), "La date du match doit être dans le futur")
+    .required("Date et heure du match requises"),
+  oddsHome: yup
+    .number()
+    .typeError("La cote doit être un nombre")
+    .required("Cote équipe domicile requise"),
+  oddsDraw: yup
+    .number()
+    .typeError("La cote doit être un nombre")
+    .required("Cote match nul requise"),
+  oddsAway: yup
+    .number()
+    .typeError("La cote doit être un nombre")
+    .required("Cote équipe extérieure requise"),
+});
+
+// Composant de la page de création de match
 function NewMatch() {
-  const [homeTeam, setHomeTeam] = useState("");
-  const [awayTeam, setAwayTeam] = useState("");
-  const [matchDate, setMatchDate] = useState("");
-  const [oddsHome, setOddsHome] = useState("");
-  const [oddsDraw, setOddsDraw] = useState("");
-  const [oddsAway, setOddsAway] = useState("");
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Nouveau match :", {
-      homeTeam,
-      awayTeam,
-      matchDate,
-      oddsHome,
-      oddsDraw,
-      oddsAway,
-    });
-    // Ici tu pourras plus tard faire un fetch POST vers la table matches
+  const onSubmit = (data) => {
+    console.log("Nouveau match :", data);
+    // On fera un fetch POST vers la table matches
   };
 
   const fields = [
+    { name: "homeTeam", label: "Équipe à domicile", type: "text" },
+    { name: "awayTeam", label: "Équipe à l'extérieur", type: "text" },
     {
-      label: "Équipe à domicile",
-      name: "homeTeam",
-      value: homeTeam,
-      onChange: (e) => setHomeTeam(e.target.value),
-      required: true,
-    },
-    {
-      label: "Équipe à l'extérieur",
-      name: "awayTeam",
-      value: awayTeam,
-      onChange: (e) => setAwayTeam(e.target.value),
-      required: true,
-    },
-    {
-      label: "Date et heure du match",
       name: "matchDate",
+      label: "Date et heure du match",
       type: "datetime-local",
-      value: matchDate,
-      onChange: (e) => setMatchDate(e.target.value),
-      required: true,
     },
-    {
-      label: "Cote équipe domicile",
-      name: "oddsHome",
-      value: oddsHome,
-      onChange: (e) => setOddsHome(e.target.value),
-      required: true,
-    },
-    {
-      label: "Cote match nul",
-      name: "oddsDraw",
-      value: oddsDraw,
-      onChange: (e) => setOddsDraw(e.target.value),
-      required: true,
-    },
-    {
-      label: "Cote équipe extérieure",
-      name: "oddsAway",
-      value: oddsAway,
-      onChange: (e) => setOddsAway(e.target.value),
-      required: true,
-    },
+    { name: "oddsHome", label: "Cote équipe domicile", type: "number" },
+    { name: "oddsDraw", label: "Cote match nul", type: "number" },
+    { name: "oddsAway", label: "Cote équipe extérieure", type: "number" },
   ];
 
   return (
@@ -79,8 +55,9 @@ function NewMatch() {
         <Form
           title="Informations du match"
           fields={fields}
-          onSubmit={handleSubmit}
+          onSubmit={onSubmit}
           submitLabel="Créer le match"
+          resolver={yupResolver(schema)}
         />
       </Card>
     </div>

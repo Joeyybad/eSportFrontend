@@ -1,51 +1,58 @@
 import React from "react";
+import { useForm } from "react-hook-form";
+import Button from "./Button";
 
-const Form = ({ title, fields, onSubmit, submitLabel = "Valider" }) => {
+function Form({ title, fields, onSubmit, submitLabel, resolver }) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({ resolver });
+
   return (
     <form
-      onSubmit={onSubmit}
-      className="bg-white shadow-md rounded-2xl p-6 w-full max-w-md mx-auto space-y-4"
+      onSubmit={handleSubmit(onSubmit)}
+      className="w-full max-w-lg mx-auto flex flex-col gap-4 bg-white p-6 rounded-lg shadow-md"
     >
-      <h2 className="text-2xl font-semibold text-center mb-4">{title}</h2>
-
-      {fields.map((field, index) => (
-        <div key={index} className="flex flex-col">
-          <label
-            htmlFor={field.name}
-            className="text-sm font-medium text-gray-700 mb-1"
-          >
+      {title && <h2 className="text-2xl font-bold mb-4">{title}</h2>}
+      {fields.map((field) => (
+        <div key={field.name} className="flex flex-col">
+          <label className="mb-1 font-medium text-gray-700">
             {field.label}
           </label>
+
           {field.type === "textarea" ? (
             <textarea
-              name={field.name}
-              required={field.required}
-              placeholder={field.placeholder || ""}
-              className="border border-gray-300 rounded-lg p-2 resize-none min-h-[120px] focus:outline-none focus:ring-2 focus:ring-purple-500"
+              {...register(field.name)}
+              placeholder={field.placeholder}
+              className="border border-gray-300 rounded-lg p-2 w-full"
             />
           ) : (
             <input
-              id={field.name}
-              name={field.name}
-              type={field.type || "text"}
-              value={field.value}
-              onChange={field.onChange}
+              type={field.type}
+              {...register(field.name)}
               placeholder={field.placeholder}
-              className="border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
-              required={field.required}
+              className="border border-gray-300 rounded-lg p-2 w-full"
             />
+          )}
+
+          {errors[field.name] && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors[field.name].message}
+            </p>
           )}
         </div>
       ))}
 
-      <button
+      <Button
+        text={submitLabel || "Envoyer"}
         type="submit"
-        className="w-full bg-purple-600 text-black py-2 rounded-xl hover:bg-purple-700 transition"
-      >
-        {submitLabel}
-      </button>
+        color="#A855F7" // violet Tailwind (équivaut à bg-purple-600)
+        className="py-2 px-4 hover:bg-purple-700 transition"
+        style={{ color: "white" }} // texte blanc
+      />
     </form>
   );
-};
+}
 
 export default Form;
