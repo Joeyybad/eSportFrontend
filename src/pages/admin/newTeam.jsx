@@ -1,14 +1,15 @@
 import React, { useState } from "react";
-import Card from "../components/layout/Card";
-import Form from "../components/ui/Form";
+import Card from "../../components/layout/Card";
+import Form from "../../components/ui/Form";
 
 function NewTeam() {
   const [teamName, setTeamName] = useState("");
+  const [game, setGame] = useState("");
   const [description, setDescription] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Nouvelle équipe :", { teamName, description });
+    console.log("Nouvelle équipe :", { teamName, game, description });
   };
 
   const fields = [
@@ -18,6 +19,13 @@ function NewTeam() {
       value: teamName,
       onChange: (e) => setTeamName(e.target.value),
       required: true,
+    },
+    {
+      label: "Jeu principal",
+      name: "game",
+      value: game,
+      onChange: (e) => setGame(e.target.value),
+      placeholder: "Sélectionnez le jeu principal",
     },
     {
       label: "Description",

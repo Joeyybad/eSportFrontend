@@ -16,16 +16,25 @@ const Form = ({ title, fields, onSubmit, submitLabel = "Valider" }) => {
           >
             {field.label}
           </label>
-          <input
-            id={field.name}
-            name={field.name}
-            type={field.type || "text"}
-            value={field.value}
-            onChange={field.onChange}
-            placeholder={field.placeholder}
-            className="border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            required={field.required}
-          />
+          {field.type === "textarea" ? (
+            <textarea
+              name={field.name}
+              required={field.required}
+              placeholder={field.placeholder || ""}
+              className="border border-gray-300 rounded-lg p-2 resize-none min-h-[120px] focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          ) : (
+            <input
+              id={field.name}
+              name={field.name}
+              type={field.type || "text"}
+              value={field.value}
+              onChange={field.onChange}
+              placeholder={field.placeholder}
+              className="border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
+              required={field.required}
+            />
+          )}
         </div>
       ))}
 

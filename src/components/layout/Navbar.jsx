@@ -10,17 +10,12 @@ import {
   User,
 } from "lucide-react";
 import { useState } from "react";
-
-// Exemple utilisateur simulé
-const user = {
-  isLoggedIn: true,
-  role: "", // "admin" ou "visitor"
-};
+import { useAuth } from "../../context/AuthContext";
 
 function Navbar() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
-
+  const { user } = useAuth(); // ✅ récupère user depuis le contexte
   return (
     <nav className="fixed left-0 bottom-0 lg:top-0 lg:bottom-auto z-50 w-full bg-white shadow-md border-t border-gray-200 lg:border-none">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 lg:px-8 py-3">
@@ -81,14 +76,14 @@ function Navbar() {
           {/* --- Menu Admin --- */}
           {user?.role === "admin" && (
             <div className="relative">
-              {/* Desktop dropdown (vers le bas) */}
-              <div className="hidden md:flex items-center gap-1 group">
+              {/* Desktop dropdown */}
+              <div className="hidden md:flex items-center gap-1 relative group">
                 <button className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-100 transition">
                   <Settings className="w-4 h-4" />
                   <span>Admin</span>
                   <ChevronDown className="w-3 h-3" />
                 </button>
-                <div className="absolute right-0 top-full mt-2 w-40 bg-white border rounded shadow-lg opacity-0 group-hover:opacity-100 transition">
+                <div className="absolute right-0 top-full mt-2 w-40 bg-white border rounded shadow-lg opacity-0 group-hover:opacity-100 transition z-50">
                   <Link
                     to="/admin/new-team"
                     className="block px-4 py-2 hover:bg-gray-100"
@@ -104,7 +99,7 @@ function Navbar() {
                 </div>
               </div>
 
-              {/* Mobile dropdown (vers le haut) */}
+              {/* Mobile dropdown */}
               <div className="flex md:hidden flex-col items-center relative">
                 <button
                   onClick={() => setAdminOpen(!adminOpen)}
@@ -120,7 +115,7 @@ function Navbar() {
                 </button>
 
                 {adminOpen && (
-                  <div className="absolute bottom-full mb-2 w-40 bg-white border rounded shadow-lg flex flex-col">
+                  <div className="absolute bottom-full mb-2 w-40 bg-white border rounded shadow-lg flex flex-col z-50">
                     <Link
                       to="/admin/new-team"
                       className="block px-4 py-2 hover:bg-gray-100"
@@ -140,11 +135,11 @@ function Navbar() {
           )}
         </div>
 
-        {/* --- Bloc droite : Menu utilisateur / Connexion / Inscription --- */}
+        {/* --- Bloc droite : User / Connexion --- */}
         <div className="flex-1 flex justify-end items-center gap-3 relative">
           {user?.isLoggedIn ? (
             <>
-              {/* Desktop version (ouvre vers le bas) */}
+              {/* Desktop user menu */}
               <div className="hidden md:block relative">
                 <button
                   onClick={() => setUserOpen(!userOpen)}
@@ -153,23 +148,14 @@ function Navbar() {
                   <User className="w-6 h-6" />
                 </button>
                 {userOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white border rounded shadow-lg flex flex-col">
-                    <Link
-                      to="/profile"
-                      className="px-4 py-2 hover:bg-gray-100 transition"
-                    >
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white border rounded shadow-lg flex flex-col z-50">
+                    <Link to="/profile" className="px-4 py-2 hover:bg-gray-100">
                       Profil
                     </Link>
-                    <Link
-                      to="/my-bets"
-                      className="px-4 py-2 hover:bg-gray-100 transition"
-                    >
+                    <Link to="/my-bets" className="px-4 py-2 hover:bg-gray-100">
                       Mes paris
                     </Link>
-                    <Link
-                      to="/my-wins"
-                      className="px-4 py-2 hover:bg-gray-100 transition"
-                    >
+                    <Link to="/my-wins" className="px-4 py-2 hover:bg-gray-100">
                       Mes gains
                     </Link>
                     <button
@@ -182,7 +168,7 @@ function Navbar() {
                 )}
               </div>
 
-              {/* Mobile / tablette version (ouvre vers le haut) */}
+              {/* Mobile user menu */}
               <div className="block md:hidden relative">
                 <button
                   onClick={() => setUserOpen(!userOpen)}
@@ -191,23 +177,14 @@ function Navbar() {
                   <User className="w-6 h-6" />
                 </button>
                 {userOpen && (
-                  <div className="absolute right-0 bottom-full mb-2 w-48 bg-white border rounded shadow-lg flex flex-col">
-                    <Link
-                      to="/profile"
-                      className="px-4 py-2 hover:bg-gray-100 transition"
-                    >
+                  <div className="absolute right-0 bottom-full mb-2 w-48 bg-white border rounded shadow-lg flex flex-col z-50">
+                    <Link to="/profile" className="px-4 py-2 hover:bg-gray-100">
                       Profil
                     </Link>
-                    <Link
-                      to="/my-bets"
-                      className="px-4 py-2 hover:bg-gray-100 transition"
-                    >
+                    <Link to="/my-bets" className="px-4 py-2 hover:bg-gray-100">
                       Mes paris
                     </Link>
-                    <Link
-                      to="/my-wins"
-                      className="px-4 py-2 hover:bg-gray-100 transition"
-                    >
+                    <Link to="/my-wins" className="px-4 py-2 hover:bg-gray-100">
                       Mes gains
                     </Link>
                     <button
@@ -222,22 +199,28 @@ function Navbar() {
             </>
           ) : (
             <>
-              <Link to="/signup">
+              <Link to="/signup" className="flex-shrink-0">
                 <Button
                   text="Inscription"
                   color="#ffffff"
                   style={{
                     border: "1px solid #9333EA",
                     color: "#9333EA",
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    fontSize: "14px",
                   }}
                 />
               </Link>
-              <Link to="/login">
+              <Link to="/login" className="flex-shrink-0">
                 <Button
                   text="Connexion"
                   color="#9333EA"
                   style={{
                     color: "white",
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    fontSize: "14px",
                   }}
                 />
               </Link>

@@ -1,12 +1,12 @@
-function Button({ text, color, onClick }) {
+function Button({ text, color, onClick, className = "", style = {} }) {
   return (
     <button
-      onClick={onClick} //
+      onClick={onClick}
+      className={` rounded-md font-medium transition ${className}`}
       style={{
         backgroundColor: color,
-        padding: "10px 20px",
-        borderRadius: "8px",
         color: "black",
+        ...style, //  passe des styles additionnels si besoin
       }}
     >
       {text}

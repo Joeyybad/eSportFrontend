@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import Card from "../components/layout/Card";
 import Form from "../components/ui/Form";
 
-export default function Signup() {
+function Signup() {
   const handleSignup = (formData) => {
     console.log("Données d'inscription :", formData);
     // Ici, tu pourras gérer la logique d'inscription plus tard (API, etc.)
@@ -55,3 +55,5 @@ export default function Signup() {
     </>
   );
 }
+
+export default Signup;
