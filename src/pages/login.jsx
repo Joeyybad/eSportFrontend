@@ -27,7 +27,7 @@ function Login() {
   return (
     <Card title="Connexion" subtitle="Connectez-vous à votre compte.">
       <Form
-        title="Connexion"
+        title=""
         fields={fields}
         onSubmit={onSubmit}
         submitLabel="Se connecter"

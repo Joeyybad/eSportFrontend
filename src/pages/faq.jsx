@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Card from "../components/layout/Card";
+import { Link } from "react-router-dom";
 
 const faqs = [
   {
@@ -35,6 +36,9 @@ function Faq() {
 
       <Card title="FAQ" subtitle="Questions fréquentes">
         <div className="flex flex-col gap-4">
+          <Link to="/conditions" className="text-purple-600 hover:underline">
+            Conditions générales d'utilisation
+          </Link>
           {faqs.map((faq) => (
             <div key={faq.id} className="border-b border-gray-200 pb-2">
               <button

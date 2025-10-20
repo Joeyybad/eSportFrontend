@@ -9,6 +9,7 @@ import Profile from "./pages/profil";
 import MyBets from "./pages/my-bets";
 import MyWins from "./pages/my-wins";
 import Faq from "./pages/faq";
+import Conditions from "./pages/conditions";
 import NewTeam from "./pages/admin/newTeam";
 import NewMatch from "./pages/admin/newMatch";
 import Contact from "./pages/contact";
@@ -29,6 +30,7 @@ function AppRoutes() {
         <Route path="/faq" element={<Faq />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/conditions" element={<Conditions />} />
 
         {/* Routes protégées */}
         <Route

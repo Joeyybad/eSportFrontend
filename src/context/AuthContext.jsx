@@ -7,8 +7,8 @@ export const AuthContext = createContext(null);
 // Provider qui englobe l'app
 export function AuthProvider({ children }) {
   const [user, setUser] = useState({
-    isLoggedIn: true,
-    role: "admin", // "user", "admin", ou ""
+    isLoggedIn: false,
+    role: "", // "user", "admin", ou ""
   });
 
   return (
