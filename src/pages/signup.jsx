@@ -4,6 +4,7 @@ import Form from "../components/ui/Form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // Schéma de validation avec Yup
 const schema = yup.object({
@@ -35,6 +36,7 @@ const schema = yup.object({
 });
 // Composant de la page d'inscription
 function Signup() {
+  const navigate = useNavigate();
   const [message, setMessage] = useState("");
   const onSubmit = async (formData) => {
     try {
@@ -73,6 +75,7 @@ function Signup() {
           "Inscription réussie ! Vous pouvez maintenant vous connecter."
       );
       console.log("Utilisateur créé :", data.user);
+      setTimeout(() => navigate("/login"), 1500);
     } catch (error) {
       console.error("Erreur réseau :", error);
       setMessage("Impossible de contacter le serveur");

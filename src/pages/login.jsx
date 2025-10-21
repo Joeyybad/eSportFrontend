@@ -35,11 +35,17 @@ function Login() {
         return;
       }
       setMessage("Connexion réussie !");
+      // Stockage des info en local
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // Mise à jour contexte utilisateur
       setUser({
         isLoggedIn: true,
+        id: data.user.id,
         username: data.user.username,
         email: data.user.email,
-        role: data.user.role || "user", // si tu gères les rôles
+        role: data.user.isAdmin ? "admin" : "user",
+        token: data.token,
       });
       setTimeout(() => navigate("/"), 1500);
     } catch (error) {

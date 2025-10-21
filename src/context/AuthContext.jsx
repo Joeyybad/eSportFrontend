@@ -8,7 +8,11 @@ export const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState({
     isLoggedIn: false,
-    role: "", // "user", "admin", ou ""
+    id: null,
+    username: "",
+    email: "",
+    role: "",
+    token: "",
   });
 
   //Lecture de la session
