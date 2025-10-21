@@ -3,6 +3,9 @@ import Card from "../components/layout/Card";
 import Form from "../components/ui/Form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 // Schéma de validation avec Yup
 const schema = yup.object({
@@ -14,9 +17,36 @@ const schema = yup.object({
 });
 // Composant de la page de connexion
 function Login() {
-  const onSubmit = (data) => {
-    console.log("Connexion :", data);
-    // on gèrera la logique de connexion plus tard (API)
+  const { setUser } = useAuth(); // pour mettre à jour le contexte utilisateur
+  const [message, setMessage] = useState(""); // usestat pour les messages
+  const navigate = useNavigate(); // hook pour la navigation
+  const onSubmit = async (formData) => {
+    try {
+      const response = await fetch("http://localhost:5000/api/user/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setMessage(
+          data.message || "Une erreur est survenue lors de la connexion"
+        );
+        return;
+      }
+      setMessage("Connexion réussie !");
+      setUser({
+        isLoggedIn: true,
+        username: data.user.username,
+        email: data.user.email,
+        role: data.user.role || "user", // si tu gères les rôles
+      });
+      setTimeout(() => navigate("/"), 1500);
+    } catch (error) {
+      console.error("Erreur réseau :", error);
+      setMessage("Impossible de contacter le serveur");
+    }
+    console.log("Connexion :", formData);
   };
   // Champs du formulaire
   const fields = [
@@ -33,6 +63,10 @@ function Login() {
         submitLabel="Se connecter"
         resolver={yupResolver(schema)}
       />
+      {/* Message d'erreur ou de succès */}
+      {message && (
+        <p className="text-purple-600 my-2 whitespace-pre-line">{message}</p>
+      )}
       <p className="text-sm text-gray-600 text-center mt-4">
         Pas encore inscrit ?{" "}
         <Link to="/signup" className="text-indigo-600 hover:underline">

@@ -35,7 +35,7 @@ const schema = yup.object({
 });
 // Composant de la page d'inscription
 function Signup() {
-  const [message, setMessage] = useState(""); // État pour afficher le message de succès ou d'erreur
+  const [message, setMessage] = useState("");
   const onSubmit = async (formData) => {
     try {
       // Convertir birthdate au format ISO
@@ -118,7 +118,7 @@ function Signup() {
         )}
         <p className="text-sm mt-2">
           En cochant cette case, vous acceptez nos{" "}
-          <a href="/cgu" className="text-purple-600 underline">
+          <a href="/cgu" className="text-purple-600 underline font-bold">
             Conditions Générales d’Utilisation
           </a>
           .

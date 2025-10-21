@@ -11,11 +11,13 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 function Navbar() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
-  const { user } = useAuth(); // ✅ récupère user depuis le contexte
+  const navigate = useNavigate(); // hook pour la navigation
+  const { user, setUser } = useAuth(); //récupère user depuis le contexte
   return (
     <nav className="fixed left-0 bottom-0 lg:top-0 lg:bottom-auto z-50 w-full bg-white shadow-md border-t border-gray-200 lg:border-none">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 lg:px-8 py-3">
@@ -136,16 +138,19 @@ function Navbar() {
         </div>
 
         {/* --- Bloc droite : User / Connexion --- */}
-        <div className="flex-1 flex justify-end items-center gap-3 relative">
+        <div className="flex-1 flex justify-end items-center gap-3 relative ">
           {user?.isLoggedIn ? (
             <>
               {/* Desktop user menu */}
               <div className="hidden md:block relative">
                 <button
                   onClick={() => setUserOpen(!userOpen)}
-                  className="p-2 rounded-full hover:bg-gray-100 transition"
+                  className="flex flex-col items-center p-2 rounded-full hover:bg-gray-100 transition"
                 >
-                  <User className="w-6 h-6" />
+                  <User className="w-6 h-6 text-gray-700" />
+                  <span className="font-medium text-purple-600 hover:text-indigo-600 text-sm mt-1">
+                    {user?.username}
+                  </span>
                 </button>
                 {userOpen && (
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white border rounded shadow-lg flex flex-col z-50">
@@ -159,7 +164,15 @@ function Navbar() {
                       Mes gains
                     </Link>
                     <button
-                      onClick={() => console.log("Logout")}
+                      onClick={() => {
+                        setUser({
+                          isLoggedIn: false,
+                          role: "",
+                          username: "",
+                          email: "",
+                        });
+                        navigate("/login");
+                      }}
                       className="text-left px-4 py-2 hover:bg-gray-100 transition"
                     >
                       Déconnexion
@@ -172,9 +185,12 @@ function Navbar() {
               <div className="block md:hidden relative">
                 <button
                   onClick={() => setUserOpen(!userOpen)}
-                  className="p-2 rounded-full hover:bg-gray-100 transition"
+                  className="flex flex-col items-center p-2 rounded-full hover:bg-gray-100 transition"
                 >
-                  <User className="w-6 h-6" />
+                  <User className="w-6 h-6 text-gray-700" />
+                  <span className="font-medium  text-purple-600 hover:text-indigo-600 text-sm mt-1">
+                    {user?.username}
+                  </span>
                 </button>
                 {userOpen && (
                   <div className="absolute right-0 bottom-full mb-2 w-48 bg-white border rounded shadow-lg flex flex-col z-50">
@@ -188,7 +204,15 @@ function Navbar() {
                       Mes gains
                     </Link>
                     <button
-                      onClick={() => console.log("Logout")}
+                      onClick={() => {
+                        setUser({
+                          isLoggedIn: false,
+                          role: "",
+                          username: "",
+                          email: "",
+                        });
+                        navigate("/login");
+                      }}
                       className="text-left px-4 py-2 hover:bg-gray-100 transition"
                     >
                       Déconnexion

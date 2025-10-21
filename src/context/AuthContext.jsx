@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 // Crée le contexte
 export const AuthContext = createContext(null);
@@ -10,6 +10,24 @@ export function AuthProvider({ children }) {
     isLoggedIn: false,
     role: "", // "user", "admin", ou ""
   });
+
+  //Lecture de la session
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser({ ...parsedUser, isLoggedIn: true });
+    }
+  }, []);
+
+  // Sauvegarde de la session quand l'user change
+  useEffect(() => {
+    if (user.isLoggedIn) {
+      localStorage.setItem("user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("user");
+    }
+  }, [user]);
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>
