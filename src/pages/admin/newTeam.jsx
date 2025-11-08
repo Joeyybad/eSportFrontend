@@ -2,25 +2,75 @@ import Card from "../../components/layout/Card";
 import Form from "../../components/ui/Form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 // Schéma de validation avec Yup
 const schema = yup.object({
-  teamName: yup.string().required("Nom de l’équipe requis"),
-  game: yup.string().required("Jeu principal requis"),
-  description: yup.string().required("Description requise"),
+  teamName: yup
+    .string()
+    .required("Nom de l’équipe requis")
+    .min(2, "2 caractères minimum"),
+  game: yup
+    .string()
+    .required("Jeu principal requis")
+    .min(2, "2 caractères minimum"),
+  description: yup
+    .string()
+    .required("Description requise")
+    .min(10, "10 caractères minimum"),
 });
 
 // Composant de la page de création d'équipe
 function NewTeam() {
-  const onSubmit = (data) => {
-    console.log("Donnée de la nouvelle équipe :", data);
-    // on gèrera la logique de connexion plus tard (API)
-  };
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [message, setMessage] = useState("");
+  useEffect(() => {
+    if (!user?.isLoggedIn) return;
+    console.log("Token actuel :", user.token);
+  }, [user]);
+  const onSubmit = async (formData) => {
+    try {
+      // FormData pour multipart/form-data
+      const dataToSend = new FormData();
+      dataToSend.append("teamName", formData.teamName);
+      dataToSend.append("game", formData.game);
+      dataToSend.append("description", formData.description);
 
+      // ajout du logo
+      if (formData.logo && formData.logo[0]) {
+        dataToSend.append("logo", formData.logo[0]);
+      }
+
+      const response = await fetch("http://localhost:5000/api/create/team", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: dataToSend, // pas de Content-Type manuel ici
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.message || "Erreur lors de la création de l'équipe");
+        return;
+      }
+
+      setMessage(" Équipe créée avec succès !");
+      setTimeout(() => navigate("/admin/teams"), 1500);
+    } catch (error) {
+      console.error("Erreur réseau :", error);
+      setMessage("Impossible de contacter le serveur");
+    }
+  };
   // Champs du formulaire
   const fields = [
     { name: "teamName", label: "Nom de l’équipe", type: "text" },
     { name: "game", label: "Jeu principal", type: "text" },
+    { name: "logo", label: "Logo de l’équipe", type: "file" },
     { name: "description", label: "Description", type: "textarea" },
   ];
 
@@ -37,6 +87,10 @@ function NewTeam() {
           submitLabel="Créer"
           resolver={yupResolver(schema)}
         />
+        {/* Message d'erreur ou de succès */}
+        {message && (
+          <p className="text-purple-600 my-2 whitespace-pre-line">{message}</p>
+        )}
       </Card>
     </>
   );

@@ -2,8 +2,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./MainLayout";
 import Home from "./pages/home";
 import Login from "./pages/login";
-import Bets from "./pages/bets";
-import Bet from "./pages/bet";
+import Matchs from "./pages/matchs";
+import Match from "./pages/match";
 import Signup from "./pages/signup";
 import Profile from "./pages/profil";
 import MyBets from "./pages/my-bets";
@@ -12,6 +12,7 @@ import Faq from "./pages/faq";
 import Conditions from "./pages/conditions";
 import NewTeam from "./pages/admin/newTeam";
 import NewMatch from "./pages/admin/newMatch";
+import Teams from "./pages/admin/teams";
 import Contact from "./pages/contact";
 import PrivateRoute from "./components/routes/PrivateRoute";
 import AdminRoute from "./components/routes/AdminRoute";
@@ -25,8 +26,8 @@ function AppRoutes() {
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Home />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/bets" element={<Bets />} />
-        <Route path="/bet/:id" element={<Bet />} />
+        <Route path="/matchs" element={<Matchs />} />
+        <Route path="/match/:id" element={<Match />} />
         <Route path="/faq" element={<Faq />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/contact" element={<Contact />} />
@@ -69,6 +70,10 @@ function AppRoutes() {
         <Route
           path="/admin/new-match"
           element={<AdminRoute user={user} element={<NewMatch />} />}
+        />
+        <Route
+          path="/admin/teams"
+          element={<AdminRoute user={user} element={<Teams />} />}
         />
       </Route>
     </Routes>

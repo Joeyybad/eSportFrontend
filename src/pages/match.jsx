@@ -17,7 +17,7 @@ const mockMatches = [
   },
 ];
 
-function Bet() {
+function Match() {
   // Récupère l'ID depuis l'URL : /bet/:id
   const { id } = useParams();
 
@@ -63,4 +63,4 @@ function Bet() {
   );
 }
 
-export default Bet;
+export default Match;

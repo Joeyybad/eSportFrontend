@@ -23,7 +23,7 @@ const matches = [
   },
 ];
 
-function Bets() {
+function Matchs() {
   return (
     <>
       <h1 className="sr-only">Paris en cours</h1>
@@ -40,7 +40,7 @@ function Bets() {
               Clique pour voir le match et placer ton pari :
             </p>
             <div className="flex gap-3 justify-center">
-              <Link to={`/bet/${match.id}`}>
+              <Link to={`/match/${match.id}`}>
                 <Button text="Voir le match" color="grey" />
               </Link>
             </div>
@@ -51,4 +51,4 @@ function Bets() {
   );
 }
 
-export default Bets;
+export default Matchs;

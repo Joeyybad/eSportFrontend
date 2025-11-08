@@ -34,7 +34,7 @@ function Navbar() {
         {/* --- Bloc centre : Liens + Admin --- */}
         <div className="flex-1 flex justify-center gap-6 items-center">
           <NavLink
-            to="/bets"
+            to="/matchs"
             className={({ isActive }) =>
               `flex flex-col items-center text-xs md:flex-row md:gap-2 md:text-base transition ${
                 isActive
@@ -98,6 +98,12 @@ function Navbar() {
                   >
                     Créer un match
                   </Link>
+                  <Link
+                    to="/admin/teams"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                  >
+                    Voir les équipes
+                  </Link>
                 </div>
               </div>
 
@@ -129,6 +135,12 @@ function Navbar() {
                       className="block px-4 py-2 hover:bg-gray-100"
                     >
                       Créer un match
+                    </Link>
+                    <Link
+                      to="/admin/teams"
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
+                      Voir les équipes
                     </Link>
                   </div>
                 )}

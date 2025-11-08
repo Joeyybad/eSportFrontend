@@ -17,22 +17,28 @@ function Form({ title, fields, onSubmit, submitLabel, resolver }) {
       {title && <h2 className="text-2xl font-bold mb-4">{title}</h2>}
       {fields.map((field) => (
         <div key={field.name} className="flex flex-col">
-          <label className="mb-1 font-medium text-gray-700">
-            {field.label}
-          </label>
+          <label className="font-medium mb-1">{field.label}</label>
 
+          {/* gestion de plusieurs types de champs */}
           {field.type === "textarea" ? (
             <textarea
               {...register(field.name)}
-              placeholder={field.placeholder}
-              className="border border-gray-300 rounded-lg p-2 w-full"
+              className="border p-2 rounded"
             />
+          ) : field.type === "select" ? (
+            <select {...register(field.name)} className="border p-2 rounded">
+              <option value="">-- Sélectionner --</option>
+              {field.options?.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           ) : (
             <input
               type={field.type}
               {...register(field.name)}
-              placeholder={field.placeholder}
-              className="border border-gray-300 rounded-lg p-2 w-full"
+              className="border p-2 rounded"
             />
           )}
 

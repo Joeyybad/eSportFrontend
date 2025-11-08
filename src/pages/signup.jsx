@@ -51,7 +51,7 @@ function Signup() {
       const response = await fetch("http://localhost:5000/api/user/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload), // <-- Inclut confirmPassword
+        body: JSON.stringify(payload),
       });
 
       //  Lecture de la réponse JSON
