@@ -1,13 +1,11 @@
-import React from "react";
-
-export default function Card({
+function Card({
   title,
   subtitle,
   children,
   className = "",
   headerRight,
   compact = false,
-  centerHeader = true, // 👈 nouvelle option (true = centré par défaut)
+  centerHeader = true,
   ...props
 }) {
   return (
@@ -33,8 +31,9 @@ export default function Card({
             {title && (
               <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
             )}
+
             {subtitle && (
-              <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+              <div className="text-sm text-gray-500 mt-1">{subtitle}</div>
             )}
           </div>
 
@@ -42,7 +41,9 @@ export default function Card({
         </header>
       )}
 
-      <div className="text-sm text-gray-700 text-center">{children}</div>
+      <div>{children}</div>
     </section>
   );
 }
+
+export default Card;

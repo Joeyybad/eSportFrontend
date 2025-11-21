@@ -52,7 +52,7 @@ function Login() {
       console.error("Erreur réseau :", error);
       setMessage("Impossible de contacter le serveur");
     }
-    console.log("Connexion :", formData);
+    // console.log("Connexion :", formData);
   };
   // Champs du formulaire
   const fields = [
@@ -71,7 +71,9 @@ function Login() {
       />
       {/* Message d'erreur ou de succès */}
       {message && (
-        <p className="text-purple-600 my-2 whitespace-pre-line">{message}</p>
+        <p className="text-purple-600 text-center my-2 whitespace-pre-line">
+          {message}
+        </p>
       )}
       <p className="text-sm text-gray-600 text-center mt-4">
         Pas encore inscrit ?{" "}

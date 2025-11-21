@@ -44,12 +44,12 @@ function NewTeam() {
         dataToSend.append("logo", formData.logo[0]);
       }
 
-      const response = await fetch("http://localhost:5000/api/create/team", {
+      const response = await fetch("http://localhost:5000/api/admin/teams", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
-        body: dataToSend, // pas de Content-Type manuel ici
+        body: dataToSend,
       });
 
       const data = await response.json();
@@ -89,7 +89,9 @@ function NewTeam() {
         />
         {/* Message d'erreur ou de succès */}
         {message && (
-          <p className="text-purple-600 my-2 whitespace-pre-line">{message}</p>
+          <p className="text-purple-600 my-2 text-center whitespace-pre-line">
+            {message}
+          </p>
         )}
       </Card>
     </>

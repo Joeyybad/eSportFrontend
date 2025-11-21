@@ -117,7 +117,9 @@ function Signup() {
         />
         {/* Message d'erreur ou de succès */}
         {message && (
-          <p className="text-purple-600 my-2 whitespace-pre-line">{message}</p>
+          <p className="text-purple-600 my-2 whitespace-pre-line text-center">
+            {message}
+          </p>
         )}
         <p className="text-sm mt-2">
           En cochant cette case, vous acceptez nos{" "}

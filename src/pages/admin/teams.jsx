@@ -29,7 +29,7 @@ function Teams() {
           return;
         }
 
-        setTeams(data || []); // ⚡️ Met à jour le state
+        setTeams(data || []); // Met à jour le state
         setLoading(false);
       } catch (error) {
         console.error("Erreur réseau :", error);
@@ -54,7 +54,7 @@ function Teams() {
           <Card key={team.id} title={team.teamName} subtitle={team.game}>
             {team.logo && (
               <img
-                src={`http://localhost:5000${team.logo}`}
+                src={`http://localhost:5000/uploads/${team.logo}`}
                 alt={`${team.teamName} logo`}
                 className="w-20 h-20 mx-auto mt-1 mb-4 object-contain"
               />

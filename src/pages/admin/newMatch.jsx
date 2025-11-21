@@ -6,8 +6,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
-// Schéma de validation avec Yup
+// Schéma de validation
 const schema = yup.object({
+  game: yup.string().required("Jeu requis"),
   homeTeamId: yup.string().required("Équipe à domicile requise"),
   awayTeamId: yup
     .string()
@@ -23,147 +24,287 @@ const schema = yup.object({
     .required("Date et heure du match requises"),
   oddsHome: yup
     .number()
-    .typeError("La cote doit être un nombre")
+    .typeError("La cote doit être un nombre decimal")
     .positive("La cote doit être positive")
+    .test("maxDecimals", "La cote ne peut avoir que 2 décimales", (value) =>
+      /^\d+(\.\d{1,2})?$/.test(value)
+    )
     .required("Cote équipe domicile requise"),
+  oddsDraw: yup
+    .number()
+    .typeError("La cote doit être un nombre decimal")
+    .positive()
+    .test("maxDecimals", "La cote ne peut avoir que 2 décimales", (value) =>
+      /^\d+(\.\d{1,2})?$/.test(value)
+    )
+    .required("Cote match nul requise"),
+
   oddsAway: yup
     .number()
-    .typeError("La cote doit être un nombre")
+    .typeError("La cote doit être un nombre decimal")
     .positive("La cote doit être positive")
+    .test("maxDecimals", "La cote ne peut avoir que 2 décimales", (value) =>
+      /^\d+(\.\d{1,2})?$/.test(value)
+    )
     .required("Cote équipe extérieure requise"),
 });
 
-// Composant de la page de création de match
 function NewMatch() {
   const { user } = useAuth();
   const navigate = useNavigate();
+
   const [message, setMessage] = useState("");
   const [teams, setTeams] = useState([]);
-  // const [loading, setLoading] = useState(true);
+  const [tournaments, setTournaments] = useState([]);
+  const [selectedTournament, setSelectedTournament] = useState("");
+  const [games, setGames] = useState([]);
+  const [selectedHomeTeam, setSelectedHomeTeam] = useState("");
+  const [selectedGame, setSelectedGame] = useState("");
 
+  // Charger les tournois correspondant au jeu sélectionné
   useEffect(() => {
+    if (!selectedGame || !user?.token) return;
+
+    const fetchTournaments = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:5000/api/tournaments?game=${encodeURIComponent(
+            selectedGame
+          )}`,
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          }
+        );
+        const data = await res.json();
+        if (res.ok) setTournaments(data || []);
+        else console.error("Erreur chargement tournois :", data);
+      } catch (err) {
+        console.error("Erreur réseau :", err);
+      }
+    };
+
+    fetchTournaments();
+  }, [selectedGame, user]);
+
+  // Charger la liste des jeux disponibles à partir des équipes
+  useEffect(() => {
+    if (!user?.token) return;
+
+    const fetchGames = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/admin/teams", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          console.error("4. Erreur fetch équipes :", data.message || data);
+          return;
+        }
+        const uniqueGames = [...new Set((data || []).map((team) => team.game))];
+
+        setGames(uniqueGames);
+      } catch (error) {
+        console.error("5. Échec du FETCH ou du JSON.parse (catch) :", error); // 👈 Point E
+      }
+    };
+
+    fetchGames();
+  }, [user]);
+
+  // Charger les équipes correspondant au jeu sélectionné
+  useEffect(() => {
+    if (!selectedGame) return;
+
     const fetchTeams = async () => {
       try {
+        console.log("1. Début du fetch /api/admin/teams");
         const response = await fetch("http://localhost:5000/api/admin/teams", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${user?.token}`,
           },
         });
+
         const data = await response.json();
 
-        if (!response.ok) {
-          console.error("Erreur lors du chargement des équipes :", data);
-          return;
+        if (response.ok) {
+          const filteredTeams = data.filter(
+            (team) => team.game === selectedGame
+          );
+          setTeams(filteredTeams);
         }
-
-        setTeams(data || []);
-        console.log("Équipes chargées :", data);
       } catch (error) {
         console.error("Erreur réseau :", error);
       }
     };
 
     fetchTeams();
-  }, [user]);
+  }, [selectedGame, user]);
 
+  // Soumission du formulaire match
   const onSubmit = async (formData) => {
     try {
-      // Convertir matchDate au format ISO
       const payload = {
         ...formData,
-        matchDate: new Date(formData.matchDate).toISOString(),
+        date: formData.matchDate
+          ? new Date(formData.matchDate).toISOString()
+          : null,
+        awayTeamId: parseInt(formData.awayTeamId),
+        homeTeamId: parseInt(formData.homeTeamId),
+        oddsHome: parseFloat(formData.oddsHome),
+        oddsDraw: parseFloat(formData.oddsDraw),
+        oddsAway: parseFloat(formData.oddsAway),
+        tournamentId: selectedTournament ? parseInt(selectedTournament) : null,
       };
-      console.log("Payload envoyé :", payload);
+      console.log("Payload corrigé envoyé :", payload);
 
-      const response = await fetch("http://localhost:5000/api/create/match", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/matches/create/match",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
-      //  Lecture de la réponse JSON
-      const data = await response.json();
+      // ✅ LIRE LE CORPS UNE SEULE FOIS, QUEL QUE SOIT LE STATUT !
+      // Si le body-parser du Back-end a échoué (très rare), response.json() peut planter
+      // Pour être sûr, on utilise text() puis JSON.parse().
+      const responseText = await response.text();
+      const data = responseText ? JSON.parse(responseText) : {};
 
       if (!response.ok) {
-        // Gestion des erreurs backend
-        if (data.errors) {
-          setMessage(data.errors.map((err) => err.msg).join("\n"));
+        // Maintenant, 'data' est déjà le corps JSON, car il a été lu au-dessus
+
+        if (data.errors && Array.isArray(data.errors)) {
+          const errorMessages = data.errors
+            .map((err) => `[${err.field}] : ${err.message}`)
+            .join("\n");
+
+          console.error("Erreurs de validation (du serveur) :", data.errors);
+          setMessage(errorMessages);
         } else {
-          setMessage(
-            data.message ||
-              "Une erreur est survenue lors de la création du match"
-          );
+          console.error("Erreur serveur non formatée :", data.message || data);
+          setMessage(data.message || "Erreur inconnue lors de la création.");
         }
         return;
       }
 
-      // Succès
-      setMessage(data.message || "Match créé avec succès !");
-      console.log("Match créé :", data.match);
-      setTimeout(() => navigate("/admin/matches"), 1500);
+      // Si response.ok est VRAI (Succès 200/201)
+      setMessage("Match créé avec succès !");
+      setTimeout(() => navigate("/matchs"), 1500);
     } catch (error) {
-      console.error("Erreur réseau :", error);
-      setMessage("Impossible de contacter le serveur");
+      console.error("Erreur réseau ou JSON.parse :", error);
+      setMessage("Erreur de connexion ou de traitement des données.");
     }
   };
 
-  const homeTeamOptions = teams.map((team) => ({
-    value: team.id,
-    label: team.teamName,
-  }));
-  const awayTeamOptions = teams.map((team) => ({
-    value: team.id,
-    label: team.teamName,
-  }));
-
+  // Définition dynamique des champs du formulaire
   const fields = [
     {
-      name: "homeTeamId",
-      label: "Équipe à domicile",
+      name: "game",
+      label: "Jeu",
       type: "select",
-      options: homeTeamOptions,
+      options: games.map((g) => ({ value: g, label: g })),
+      onChange: (e) => setSelectedGame(e.target.value),
     },
-    {
-      name: "awayTeamId",
-      label: "Équipe à l'extérieur",
-      type: "select",
-      options: awayTeamOptions,
-    },
-    {
-      name: "matchDate",
-      label: "Date et heure du match",
-      type: "datetime-local",
-    },
-    { name: "oddsHome", label: "Cote équipe domicile", type: "number" },
-    { name: "oddsAway", label: "Cote équipe extérieure", type: "number" },
+    ...(selectedGame
+      ? [
+          {
+            name: "tournamentId",
+            label: "Tournoi",
+            type: "select",
+            options: tournaments.map((t) => ({
+              value: t.id,
+              label: t.name,
+            })),
+            onChange: (e) => setSelectedTournament(e.target.value),
+          },
+          {
+            name: "phase",
+            label: "Phase du tournoi",
+            type: "text",
+            placeholder: "Ex: Phase de groupes, Quart de finale...",
+          },
+          {
+            name: "homeTeamId",
+            label: "Équipe à domicile",
+            type: "select",
+            options: teams.map((team) => ({
+              value: team.id,
+              label: team.teamName,
+            })),
+            onChange: (e) => setSelectedHomeTeam(e.target.value),
+          },
+          {
+            name: "awayTeamId",
+            label: "Équipe à l'extérieur",
+            type: "select",
+            options: teams
+              .filter((team) => team.id !== parseInt(selectedHomeTeam))
+              .map((team) => ({
+                value: team.id,
+                label: team.teamName,
+              })),
+          },
+          {
+            name: "oddsHome",
+            label: "Cote équipe domicile",
+            type: "number",
+            step: "0.01",
+          },
+          {
+            name: "oddsDraw",
+            label: "Cote match nul",
+            type: "decimal",
+          },
+          {
+            name: "oddsAway",
+            label: "Cote équipe extérieure",
+            type: "number",
+            step: "0.01",
+          },
+          {
+            name: "matchDate",
+            label: "Date du match",
+            type: "datetime-local",
+          },
+        ]
+      : []),
   ];
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
       <Card
         title="Créer un nouveau match"
-        subtitle="Configure un match pour que les utilisateurs puissent parier dessus."
+        subtitle="Choisis d’abord le jeu, puis les équipes correspondantes."
       >
-        {teams.length === 0 ? (
+        {games.length === 0 ? (
           <p className="text-red-600">
-            ⚠️ Aucune équipe disponible. Créez d’abord des équipes avant de
-            créer un match.
+            ⚠️ Aucun jeu disponible. Créez d’abord des équipes (elles doivent
+            être liées à un jeu).
           </p>
         ) : (
-          <>
-            <Form
-              title="Informations du match"
-              fields={fields}
-              onSubmit={onSubmit}
-              submitLabel="Créer le match"
-              resolver={yupResolver(schema)}
-            />
-            {message && (
-              <p className="text-purple-600 my-2 whitespace-pre-line">
-                {message}
-              </p>
-            )}
-          </>
+          <Form
+            title="Informations du match"
+            fields={fields}
+            onSubmit={onSubmit}
+            submitLabel="Créer le match"
+            resolver={yupResolver(schema)}
+          />
+        )}
+        {message && (
+          <p className="text-purple-600 my-2 text-center whitespace-pre-line">
+            {message}
+          </p>
         )}
       </Card>
     </div>

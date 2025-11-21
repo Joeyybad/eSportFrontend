@@ -1,7 +1,7 @@
 import Logo from "../ui/Logo";
 import { FaFacebookF, FaTwitter, FaInstagram } from "react-icons/fa";
 
-export default function Footer() {
+function Footer() {
   return (
     // caché sur mobile/tablette, affiché et fixé en bas sur desktop (lg+)
     <footer className="hidden lg:block lg:fixed lg:bottom-0 lg:left-0 lg:right-0 bg-white shadow-inner z-40">
@@ -29,3 +29,5 @@ export default function Footer() {
     </footer>
   );
 }
+
+export default Footer;

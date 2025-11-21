@@ -1,13 +1,27 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import Button from "./Button";
+import { useEffect } from "react";
 
-function Form({ title, fields, onSubmit, submitLabel, resolver }) {
+function Form({
+  title,
+  fields,
+  onSubmit,
+  submitLabel,
+  resolver,
+  defaultValues,
+}) {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({ resolver });
+    reset,
+  } = useForm({ resolver, defaultValues });
+
+  // Synchronisation valeurs initiales dès qu'elles changent
+  useEffect(() => {
+    reset(defaultValues);
+  }, [defaultValues, reset]);
 
   return (
     <form
@@ -26,7 +40,13 @@ function Form({ title, fields, onSubmit, submitLabel, resolver }) {
               className="border p-2 rounded"
             />
           ) : field.type === "select" ? (
-            <select {...register(field.name)} className="border p-2 rounded">
+            <select
+              {...register(field.name)}
+              onChange={(e) => {
+                field.onChange?.(e); // Appelle la fonction si elle existe
+              }}
+              className="border p-2 rounded"
+            >
               <option value="">-- Sélectionner --</option>
               {field.options?.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -37,11 +57,12 @@ function Form({ title, fields, onSubmit, submitLabel, resolver }) {
           ) : (
             <input
               type={field.type}
+              step={field.step}
+              placeholder={field.placeholder}
               {...register(field.name)}
               className="border p-2 rounded"
             />
           )}
-
           {errors[field.name] && (
             <p className="text-red-500 text-sm mt-1">
               {errors[field.name].message}

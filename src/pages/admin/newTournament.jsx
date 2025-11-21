@@ -1,0 +1,145 @@
+import Card from "../../components/layout/Card";
+import Form from "../../components/ui/Form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+
+// Schéma de validation
+const schema = yup.object({
+  name: yup.string().required("Nom du tournoi requis"),
+  game: yup.string().required("Jeu requis"),
+  description: yup.string(),
+  startDate: yup
+    .date()
+    .typeError("Veuillez entrer une date valide")
+    .required("Date de début requise"),
+  endDate: yup
+    .date()
+    .typeError("Veuillez entrer une date valide")
+    .min(yup.ref("startDate"), "La date de fin doit être après le début")
+    .nullable(),
+});
+
+function NewTournament() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const [message, setMessage] = useState("");
+  const [games, setGames] = useState([]);
+
+  // Charger la liste des jeux existants via les équipes (même logique que NewMatch)
+  useEffect(() => {
+    if (!user?.token) return;
+
+    const fetchGames = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/admin/teams", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user?.token}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error("Erreur lors du chargement des équipes :", data);
+          return;
+        }
+
+        // Récupérer les jeux uniques
+        const uniqueGames = [...new Set((data || []).map((team) => team.game))];
+        setGames(uniqueGames);
+      } catch (error) {
+        console.error("Erreur réseau :", error);
+      }
+    };
+
+    fetchGames();
+  }, [user]);
+
+  // Soumission formulaire
+  const onSubmit = async (formData) => {
+    try {
+      const response = await fetch("http://localhost:5000/api/tournaments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.message || "Erreur lors de la création du tournoi");
+        return;
+      }
+
+      setMessage("Tournoi créé avec succès !");
+      setTimeout(() => navigate("/tournaments"), 1500);
+    } catch (error) {
+      console.error("Erreur réseau :", error);
+      setMessage("Impossible de contacter le serveur");
+    }
+  };
+
+  // Champs du formulaire
+  const fields = [
+    {
+      name: "name",
+      label: "Nom du tournoi",
+      type: "text",
+      placeholder: "Ex: LFL Finals, MSI Group Stage...",
+    },
+    {
+      name: "game",
+      label: "Jeu",
+      type: "select",
+      options: games.map((g) => ({ value: g, label: g })),
+    },
+    {
+      name: "description",
+      label: "Description",
+      type: "textarea",
+    },
+    {
+      name: "startDate",
+      label: "Date de début",
+      type: "datetime-local",
+    },
+    {
+      name: "endDate",
+      label: "Date de fin (optionnel)",
+      type: "datetime-local",
+    },
+  ];
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      <Card
+        title="Créer un nouveau tournoi"
+        subtitle="Configure les informations du tournoi."
+      >
+        <Form
+          title=""
+          fields={fields}
+          onSubmit={onSubmit}
+          submitLabel="Créer le tournoi"
+          resolver={yupResolver(schema)}
+        />
+
+        {message && (
+          <p className="text-purple-600 my-2 text-center whitespace-pre-line">
+            {message}
+          </p>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+export default NewTournament;

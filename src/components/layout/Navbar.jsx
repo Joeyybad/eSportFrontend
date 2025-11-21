@@ -8,6 +8,7 @@ import {
   Settings,
   ChevronDown,
   User,
+  Swords,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -16,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 function Navbar() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
-  const navigate = useNavigate(); // hook pour la navigation
+  const navigate = useNavigate();
   const { user, setUser } = useAuth(); //récupère user depuis le contexte
   return (
     <nav className="fixed left-0 bottom-0 lg:top-0 lg:bottom-auto z-50 w-full bg-white shadow-md border-t border-gray-200 lg:border-none">
@@ -34,7 +35,7 @@ function Navbar() {
         {/* --- Bloc centre : Liens + Admin --- */}
         <div className="flex-1 flex justify-center gap-6 items-center">
           <NavLink
-            to="/matchs"
+            to="/tournaments"
             className={({ isActive }) =>
               `flex flex-col items-center text-xs md:flex-row md:gap-2 md:text-base transition ${
                 isActive
@@ -44,7 +45,20 @@ function Navbar() {
             }
           >
             <Gamepad2 className="w-5 h-5" />
-            <span className="hidden md:inline">Paris</span>
+            <span className="hidden md:inline">Tournois</span>
+          </NavLink>
+          <NavLink
+            to="/matchs"
+            className={({ isActive }) =>
+              `flex flex-col items-center text-xs md:flex-row md:gap-2 md:text-base transition ${
+                isActive
+                  ? "text-purple-600 font-medium"
+                  : "text-gray-700 hover:text-purple-600"
+              }`
+            }
+          >
+            <Swords className="w-5 h-5" />
+            <span className="hidden md:inline">Matchs</span>
           </NavLink>
 
           <NavLink
@@ -78,36 +92,64 @@ function Navbar() {
           {/* --- Menu Admin --- */}
           {user?.role === "admin" && (
             <div className="relative">
-              {/* Desktop dropdown */}
-              <div className="hidden md:flex items-center gap-1 relative group">
-                <button className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-100 transition">
+              {/* Admin dropdown desktop (CLICK instead of hover) */}
+              <div className="hidden md:flex items-center gap-1 relative">
+                <button
+                  onClick={() => setAdminOpen(!adminOpen)}
+                  className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-100 transition"
+                >
                   <Settings className="w-4 h-4" />
                   <span>Admin</span>
-                  <ChevronDown className="w-3 h-3" />
+                  <ChevronDown
+                    className={`w-3 h-3 transition-transform ${
+                      adminOpen ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
-                <div className="absolute right-0 top-full mt-2 w-40 bg-white border rounded shadow-lg opacity-0 group-hover:opacity-100 transition z-50">
-                  <Link
-                    to="/admin/new-team"
-                    className="block px-4 py-2 hover:bg-gray-100"
-                  >
-                    Créer une équipe
-                  </Link>
-                  <Link
-                    to="/admin/new-match"
-                    className="block px-4 py-2 hover:bg-gray-100"
-                  >
-                    Créer un match
-                  </Link>
-                  <Link
-                    to="/admin/teams"
-                    className="block px-4 py-2 hover:bg-gray-100"
-                  >
-                    Voir les équipes
-                  </Link>
-                </div>
+
+                {adminOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-40 bg-white border rounded shadow-lg z-50">
+                    <Link
+                      to="/admin/new-team"
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
+                      Créer une équipe
+                    </Link>
+                    <Link
+                      to="/admin/new-match"
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
+                      Créer un match
+                    </Link>
+                    <Link
+                      to="/admin/new-tournament"
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
+                      Créer un tournoi
+                    </Link>
+                    <Link
+                      to="/admin/teams"
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
+                      Voir les équipes
+                    </Link>
+                    <Link
+                      to="/admin/gestion-match"
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
+                      Gérer les matchs
+                    </Link>
+                    <Link
+                      to="/admin/gestion-tournament"
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
+                      Gérer les tournois
+                    </Link>
+                  </div>
+                )}
               </div>
 
-              {/* Mobile dropdown */}
+              {/* Mobile dropdown reste identique */}
               <div className="flex md:hidden flex-col items-center relative">
                 <button
                   onClick={() => setAdminOpen(!adminOpen)}
@@ -137,10 +179,28 @@ function Navbar() {
                       Créer un match
                     </Link>
                     <Link
+                      to="/admin/new-tournament"
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
+                      Créer un tournoi
+                    </Link>
+                    <Link
                       to="/admin/teams"
                       className="block px-4 py-2 hover:bg-gray-100"
                     >
                       Voir les équipes
+                    </Link>
+                    <Link
+                      to="/admin/gestion-match"
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
+                      Gérer les matchs
+                    </Link>
+                    <Link
+                      to="/admin/gestion-tournament"
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
+                      Gérer les tournois
                     </Link>
                   </div>
                 )}

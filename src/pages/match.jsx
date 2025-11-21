@@ -1,63 +1,208 @@
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Card from "../components/layout/Card";
-
-// Données simulées pour l'exemple
-const mockMatches = [
-  {
-    id: "1",
-    homeTeam: "Team Alpha",
-    awayTeam: "Team Omega",
-    date: "2025-10-22 18:00",
-  },
-  {
-    id: "2",
-    homeTeam: "Red Dragons",
-    awayTeam: "Blue Phoenix",
-    date: "2025-10-23 20:30",
-  },
-];
+import Button from "../components/ui/Button";
+import StatusBadge from "../components/ui/StatusBadge";
+import { useAuth } from "../context/AuthContext";
 
 function Match() {
-  // Récupère l'ID depuis l'URL : /bet/:id
+  const { user } = useAuth();
   const { id } = useParams();
+  const [match, setMatch] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [amount, setAmount] = useState("");
+  const [selectedPrediction, setSelectedPrediction] = useState(null);
+  const [message, setMessage] = useState("");
 
-  // Cherche le match correspondant
-  const match = mockMatches.find((m) => m.id === id);
+  useEffect(() => {
+    const fetchMatch = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/matches/${id}`,
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
 
-  // Si aucun match trouvé (mauvais id)
-  if (!match) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-10 text-center">
-        <Card title="Match introuvable" subtitle="Vérifie l'URL ou réessaie.">
-          <p>Le match que tu cherches n'existe pas ou a été supprimé.</p>
-        </Card>
-      </div>
-    );
-  }
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Erreur serveur");
+        setMatch(data);
+      } catch (error) {
+        console.error("Erreur récupération du match :", error);
+        setMessage("Impossible de charger ce match.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMatch();
+  }, [id]);
+
+  const handleBet = async () => {
+    if (!selectedPrediction || !amount) {
+      setMessage("Choisis une équipe et indique un montant !");
+      return;
+    }
+
+    try {
+      const payload = {
+        matchId: match.id,
+        amount: parseFloat(amount),
+        prediction: selectedPrediction,
+      };
+      console.log("Payload envoyé :", payload);
+      const response = await fetch("http://localhost:5000/api/bets", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({
+          matchId: match.id,
+          amount: parseFloat(amount),
+          prediction: selectedPrediction,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.message || "Erreur serveur");
+      setMessage("Pari enregistré avec succès !");
+      setAmount("");
+      setSelectedPrediction(null);
+    } catch (error) {
+      console.error("Erreur lors du pari :", error);
+      setMessage("Erreur lors de l’enregistrement du pari.");
+    }
+  };
+
+  if (loading) return <p className="text-purple-600">Chargement...</p>;
+  if (!match) return <p className="text-red-600">Aucun match trouvé.</p>;
+
+  const isCompleted = match?.status === "completed";
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6 text-center">
       <Card
         key={match.id}
-        title={`${match.homeTeam} vs ${match.awayTeam}`}
-        subtitle={`Match prévu le ${match.date}`}
+        title={`${match.homeTeam?.teamName || "Équipe A"} vs ${
+          match.awayTeam?.teamName || "Équipe B"
+        }`}
+        subtitle={
+          <div className="flex flex-col items-center">
+            <StatusBadge status={match.status} />
+            le{" "}
+            {new Date(match.date).toLocaleString("fr-FR", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </div>
+        }
         centerHeader={false}
       >
-        <p className="mb-3">Place ton pari sur ton équipe favorite :</p>
+        <div className="flex items-center justify-center gap-10 mb-4">
+          {match.homeTeam?.logo && (
+            <div className="w-20 h-20 md:w-16 md:h-16 flex items-center justify-center">
+              <img
+                src={`http://localhost:5000/uploads/${match.homeTeam.logo}`}
+                alt={`${match.homeTeam.teamName} logo`}
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
+          )}
 
-        <div className="flex gap-3 justify-center">
-          <button className="px-3 py-1.5 bg-purple-600 text-black rounded hover:bg-purple-700 transition">
-            {match.homeTeam}
-          </button>
+          <span className="text-2xl font-semibold">VS</span>
 
-          <button className="px-3 py-1.5 bg-gray-200 text-purple-600 rounded hover:bg-gray-300 transition">
-            Match nul
-          </button>
-
-          <button className="px-3 py-1.5 bg-purple-600 text-black rounded hover:bg-purple-700 transition">
-            {match.awayTeam}
-          </button>
+          {match.awayTeam?.logo && (
+            <div className="w-20 h-20 md:w-16 md:h-16 flex items-center justify-center">
+              <img
+                src={`http://localhost:5000/uploads/${match.awayTeam.logo}`}
+                alt={`${match.awayTeam.teamName} logo`}
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
+          )}
         </div>
+        {isCompleted ? ( // si le match est terminé
+          <p className="text-red-600 font-semibold text-md mt-4">
+            Les paris sont fermés : le match est terminé.
+          </p>
+        ) : // si user connecté
+        user && user.token ? (
+          <>
+            <p className="mb-3">Place ton pari sur ton équipe favorite :</p>
+
+            <div className="flex gap-3 justify-center mb-4">
+              <button
+                onClick={() => setSelectedPrediction("home")}
+                className={`px-3 py-1.5 rounded transition ${
+                  selectedPrediction === "home"
+                    ? "bg-purple-700 text-black"
+                    : "bg-purple-600 text-black hover:bg-purple-700"
+                }`}
+              >
+                {match.homeTeam?.teamName} ({match.oddsHome})
+              </button>
+
+              <button
+                onClick={() => setSelectedPrediction("draw")}
+                className={`px-3 py-1.5 rounded transition ${
+                  selectedPrediction === "draw"
+                    ? "bg-gray-400 text-purple-700"
+                    : "bg-gray-200 text-purple-600 hover:bg-gray-300"
+                }`}
+              >
+                Match nul ({match.oddsDraw})
+              </button>
+
+              <button
+                onClick={() => setSelectedPrediction("away")}
+                className={`px-3 py-1.5 rounded transition ${
+                  selectedPrediction === "away"
+                    ? "bg-purple-700 text-black"
+                    : "bg-purple-600 text-black hover:bg-purple-700"
+                }`}
+              >
+                {match.awayTeam?.teamName} ({match.oddsAway})
+              </button>
+            </div>
+
+            <div className="flex flex-col items-center gap-2 mb-4">
+              <input
+                type="number"
+                min="1"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Montant à miser (€)"
+                className="border border-gray-300 rounded p-2 w-40 text-center"
+              />
+              <Button
+                text="Valider le pari"
+                color="#9333EA"
+                onClick={handleBet}
+                style={{ color: "white" }}
+              />
+            </div>
+
+            {message && (
+              <p className="text-sm mt-2 text-purple-600">{message}</p>
+            )}
+          </>
+        ) : (
+          // ✅ Si le match n'est pas terminé mais que l'utilisateur n'est pas connecté
+          <p className="text-purple-600 font-semibold text-md mt-4">
+            Connecte-toi pour placer un pari sur ce match !
+          </p>
+        )}
+        <Link
+          to="/matchs"
+          className="block mt-4 text-purple-600 hover:underline"
+        >
+          ← Retour aux matchs
+        </Link>
       </Card>
     </div>
   );

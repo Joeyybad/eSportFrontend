@@ -4,19 +4,8 @@ import Modal from "../components/ui/Modal";
 import { useAuth } from "../context/AuthContext";
 import { useState, useEffect } from "react";
 
-// Exemple de données utilisateur (mock)
-// const user = {
-//   avatar: "/path/to/avatar.jpg",
-//   username: "Gamer123",
-//   favoritesGames: ["League of Legends", "Dota 2", "CS:GO"],
-//   favoritesTeams: ["Team Liquid", "Fnatic", "G2 Esports"],
-//   email: "jean.dupont@example.com",
-//   betsWon: 12,
-//   betsTotal: 20,
-// };
-
 function Profile() {
-  const { user } = useAuth(); // récupère l'user connecté
+  const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -154,6 +143,7 @@ function Profile() {
           </div>
         </div>
       </Card>
+
       {/* --- Modal --- */}
       {showModal && (
         <Modal title="Modifier mon profil" onClose={() => setShowModal(false)}>
