@@ -1,18 +1,83 @@
 Jordan NKUNGA
 
-# React + Vite
+## ProjectReactEsportEvo
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Etape de mise en place
 
-Currently, two official plugins are available:
+- Pré requis :
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Node.js ≥ 18
+npm ≥ 9
+MySQL ≥ 8
+Git
 
-## React Compiler
+- Installation npm install dans le dossier du projet
+- démarrage npm run dev
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+url locale : http://localhost:5173
 
-## Expanding the ESLint configuration
+le serveur back-end n'autorise que les requêtes de cette url locale, via la configuration Cors dans son fichier app.js
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# Choix technologiques & justification
+
+Environnement & Framework :
+ReactJS (setup avec Vite)
+Plus rapide, plus léger, temps de compilation réduit, très simple à démarrer
+
+Styling :
+index.css style minime globale
+Tailwind CSS
+Intégration immédiate avec React + classes utilitaires efficaces permettant de prototyper très vite l’UI.
+
+Requêtes HTTP:
+
+Fetch API (native)
+Suffisant, léger, aucune dépendance externe.
+Choisi pour éviter des risques de dépréciation ou évolution lourde d'Axios et rester minimaliste.
+
+Navigation:
+
+React Router
+Standard de facto pour la navigation dans une SPA React.
+
+Gestion de l’état global
+
+Tentative initiale de faire un Context personnalisé, mais plusieurs complications (persistances & re-render).
+
+Migration vers Zustand
+léger, simple à prendre en main, scalable, approche moderne et intuitive.
+Plus flexible que Context pour gérer le user et le token.
+
+# structure du projet
+
+/EsportEvoFrontend
+│
+├── eslint.config.js Configuration linting
+├── index.html Template racine
+├── vite.config.js Configuration Vite
+├── README.md Documentation du projet
+├── package.json
+├── package-lock.json
+│
+└── src/
+├── assets/
+│ └── images/
+│ └── logo.jpg
+│
+├── components/
+│ ├── layout/ Composants structurants (Header, Footer…)
+│ ├── ui/ Composants UI réutilisables (Button, Input…)
+│ └── routes/ ProtectedRoute, AdminRoute…
+│
+├── pages/
+│ ├── admin/ Pages réservées à l’admin
+│ └── \*.jsx Pages publiques (Home, Login, Signup, Profile…)
+│
+├── stores/
+│ └── useAuthStore.js Store Zustand (user, token, login, logout)
+│
+├── App.css
+├── App.jsx Déclaration des routes + layout global
+├── index.css
+├── Main.jsx Point d’entrée React (ReactDOM.createRoot)
+└── MainLayout.jsx Layout général incluant Navbar/Footer
