@@ -23,10 +23,50 @@ import Teams from "./pages/admin/teams";
 import Contact from "./pages/contact";
 import PrivateRoute from "./components/routes/PrivateRoute";
 import AdminRoute from "./components/routes/AdminRoute";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { useAuthStore } from "./stores/useAuthStore";
+import { useState, useEffect } from "react";
 
 function AppRoutes() {
-  const { user } = useAuth();
+  // 1. Gérer l'état d'hydratation et récupérer l'état du store (TOUS LES HOOKS EN PREMIER)
+
+  // CORRECTION ICI : On récupère les valeurs une par une (Sélecteurs Atomiques)
+  // Cela garantit que React ne détecte pas de "nouvel objet" à chaque rendu, stoppant la boucle infinie.
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const token = useAuthStore((state) => state.token);
+  const role = useAuthStore((state) => state.role);
+
+  // On reconstruit l'objet 'user' localement pour le passer aux props plus bas
+  const user = { isLoggedIn, token, role };
+
+  // Hook 2: Gérer l'état d'hydratation du store Zustand
+  const [isHydrated, setIsHydrated] = useState(
+    useAuthStore.persist.hasHydrated()
+  );
+
+  // Hook 3: Effect pour l'écoute de l'hydratation
+  useEffect(() => {
+    // Si l'état n'est pas encore hydraté, on écoute l'événement de fin d'hydratation
+    if (!isHydrated) {
+      // useAuthStore.persist.onFinish est un outil fourni par le middleware persist
+      const unsubscribe = useAuthStore.persist.onFinish(() => {
+        setIsHydrated(true);
+      });
+      // Fonction de nettoyage pour retirer l'écouteur lors du démontage du composant
+      return () => unsubscribe();
+    }
+  }, [isHydrated]);
+
+  // 2. Vérification conditionnelle de l'hydratation (vient après tous les appels de Hooks)
+  if (!isHydrated) {
+    // Ceci empêche l'exécution du code dépendant de l'état du store tant qu'il n'est pas stable.
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="text-xl font-semibold text-purple-600 p-4 rounded-lg bg-white shadow-lg animate-pulse">
+          Chargement de l'authentification...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
@@ -47,7 +87,7 @@ function AppRoutes() {
           path="/profile"
           element={
             <PrivateRoute
-              isAuthenticated={user?.isLoggedIn}
+              isAuthenticated={user.isLoggedIn}
               element={<Profile />}
             />
           }
@@ -56,7 +96,7 @@ function AppRoutes() {
           path="/my-bets"
           element={
             <PrivateRoute
-              isAuthenticated={user?.isLoggedIn}
+              isAuthenticated={user.isLoggedIn}
               element={<MyBets />}
             />
           }
@@ -65,7 +105,7 @@ function AppRoutes() {
           path="/my-wins"
           element={
             <PrivateRoute
-              isAuthenticated={user?.isLoggedIn}
+              isAuthenticated={user.isLoggedIn}
               element={<MyWins />}
             />
           }
@@ -111,11 +151,9 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
   );
 }
 

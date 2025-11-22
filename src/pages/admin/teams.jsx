@@ -1,23 +1,27 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuthStore } from "../../stores/useAuthStore";
 import Card from "../../components/layout/Card";
 import { useLocation } from "react-router-dom";
 
 function Teams() {
-  const { user } = useAuth();
+  const token = useAuthStore((state) => state.token);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [teams, setTeams] = useState([]);
 
   useEffect(() => {
-    if (!user?.isLoggedIn) return;
+    if (!isLoggedIn) {
+      setLoading(false);
+      return;
+    }
 
     const fetchTeams = async () => {
       try {
         const response = await fetch("http://localhost:5000/api/admin/teams", {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -38,7 +42,7 @@ function Teams() {
     };
 
     fetchTeams();
-  }, [user, location]);
+  }, [isLoggedIn, token, location]);
 
   if (loading) return <p className="text-purple-600">Chargement...</p>;
   if (!teams.length)

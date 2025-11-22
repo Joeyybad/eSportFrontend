@@ -4,7 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuthStore } from "../../stores/useAuthStore";
 
 // Schéma de validation avec Yup
 const schema = yup.object({
@@ -24,16 +24,16 @@ const schema = yup.object({
 
 // Composant de la page de création d'équipe
 function NewTeam() {
-  const { user } = useAuth();
+  const token = useAuthStore((state) => state.token);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
   useEffect(() => {
-    if (!user?.isLoggedIn) return;
-    console.log("Token actuel :", user.token);
-  }, [user]);
+    if (!isLoggedIn) return;
+    console.log("Token actuel :", token);
+  }, [isLoggedIn, token]);
   const onSubmit = async (formData) => {
     try {
-      // FormData pour multipart/form-data
       const dataToSend = new FormData();
       dataToSend.append("teamName", formData.teamName);
       dataToSend.append("game", formData.game);
@@ -47,7 +47,7 @@ function NewTeam() {
       const response = await fetch("http://localhost:5000/api/admin/teams", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${user.token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: dataToSend,
       });

@@ -1,23 +1,26 @@
 import { useEffect, useState } from "react";
 import Card from "../components/layout/Card";
 import Button from "../components/ui/Button";
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../stores/useAuthStore";
 
 function MyWins() {
-  const { user } = useAuth();
+  const token = useAuthStore((state) => state.token);
   const [wins, setWins] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Charger les bets du user
   useEffect(() => {
-    if (!user?.token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
     const fetchWins = async () => {
       try {
         const res = await fetch("http://localhost:5000/api/bets/user", {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -36,7 +39,7 @@ function MyWins() {
     };
 
     fetchWins();
-  }, [user]);
+  }, [token]);
 
   if (loading) return <p className="text-purple-600">Chargement...</p>;
 
@@ -75,7 +78,13 @@ function MyWins() {
                   {win.Match.homeTeam.teamName} vs {win.Match.awayTeam.teamName}
                 </p>
                 <p className="text-gray-500 text-xs">
-                  {new Date(win.Match.date).toLocaleString()}
+                  {new Date(win.Match.date).toLocaleString("fr-FR", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </p>
               </div>
 

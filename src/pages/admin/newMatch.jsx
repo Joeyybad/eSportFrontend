@@ -4,7 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuthStore } from "../../stores/useAuthStore";
 
 // Schéma de validation
 const schema = yup.object({
@@ -50,7 +50,8 @@ const schema = yup.object({
 });
 
 function NewMatch() {
-  const { user } = useAuth();
+  const token = useAuthStore((state) => state.token);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const navigate = useNavigate();
 
   const [message, setMessage] = useState("");
@@ -63,7 +64,7 @@ function NewMatch() {
 
   // Charger les tournois correspondant au jeu sélectionné
   useEffect(() => {
-    if (!selectedGame || !user?.token) return;
+    if (!selectedGame || !token) return;
 
     const fetchTournaments = async () => {
       try {
@@ -73,7 +74,7 @@ function NewMatch() {
           )}`,
           {
             headers: {
-              Authorization: `Bearer ${user.token}`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -86,18 +87,18 @@ function NewMatch() {
     };
 
     fetchTournaments();
-  }, [selectedGame, user]);
+  }, [selectedGame, token]);
 
   // Charger la liste des jeux disponibles à partir des équipes
   useEffect(() => {
-    if (!user?.token) return;
+    if (!token) return;
 
     const fetchGames = async () => {
       try {
         const response = await fetch("http://localhost:5000/api/admin/teams", {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         const data = await response.json();
@@ -114,11 +115,11 @@ function NewMatch() {
     };
 
     fetchGames();
-  }, [user]);
+  }, [token]);
 
   // Charger les équipes correspondant au jeu sélectionné
   useEffect(() => {
-    if (!selectedGame) return;
+    if (!selectedGame || !token) return;
 
     const fetchTeams = async () => {
       try {
@@ -126,7 +127,7 @@ function NewMatch() {
         const response = await fetch("http://localhost:5000/api/admin/teams", {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user?.token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -144,7 +145,7 @@ function NewMatch() {
     };
 
     fetchTeams();
-  }, [selectedGame, user]);
+  }, [selectedGame, token]);
 
   // Soumission du formulaire match
   const onSubmit = async (formData) => {
@@ -169,7 +170,7 @@ function NewMatch() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(payload),
         }
@@ -206,6 +207,14 @@ function NewMatch() {
       setMessage("Erreur de connexion ou de traitement des données.");
     }
   };
+
+  if (!isLoggedIn) {
+    return (
+      <p className="text-red-600 text-center py-8">
+        Vous devez être connecté pour créer un match.
+      </p>
+    );
+  }
 
   // Définition dynamique des champs du formulaire
   const fields = [

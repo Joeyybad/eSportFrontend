@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Card from "../components/layout/Card";
 import Button from "../components/ui/Button";
+import StatusBadge from "../components/ui/StatusBadge";
 
 function Tournaments() {
   const [tournaments, setTournaments] = useState([]);
@@ -58,6 +59,9 @@ function Tournaments() {
             </Link>
           }
         >
+          <p>
+            <strong>Status :</strong> <StatusBadge status={t.status} />
+          </p>
           <p className="text-gray-700">{t.description}</p>
         </Card>
       ))}

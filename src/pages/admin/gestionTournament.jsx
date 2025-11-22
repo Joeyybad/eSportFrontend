@@ -5,10 +5,11 @@ import Card from "../../components/layout/Card";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import { Pencil, Trash2 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuthStore } from "../../stores/useAuthStore";
 
 function GestionTournament() {
-  const { user } = useAuth();
+  const token = useAuthStore((state) => state.token);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,13 +30,16 @@ function GestionTournament() {
       console.error("Aucun tournoi sélectionné pour la suppression");
       return;
     }
-
+    if (!token) {
+      alert("Erreur: Jeton d'authentification manquant.");
+      return;
+    }
     try {
       console.log(
         "Suppression tournoi ID :",
         tournamentToDelete.id,
         "Token :",
-        user?.token
+        token
       );
 
       const res = await fetch(
@@ -44,7 +48,7 @@ function GestionTournament() {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -93,7 +97,13 @@ function GestionTournament() {
 
     fetchTournaments();
   }, []);
-
+  if (!isLoggedIn) {
+    return (
+      <p className="text-red-600 text-center py-8">
+        Vous devez être connecté pour créer un match.
+      </p>
+    );
+  }
   if (loading) return <p>Chargement…</p>;
 
   return (
@@ -146,6 +156,9 @@ function GestionTournament() {
           </p>
         )}
       </Card>
+      <Link to="/tournaments" className="text-purple-600 hover:underline">
+        ← Retour aux tournois
+      </Link>
 
       {/* --- MODALE DELETE --- */}
       {showDeleteModal && (

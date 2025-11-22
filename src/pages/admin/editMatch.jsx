@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Card from "../../components/layout/Card";
 import Form from "../../components/ui/Form";
-import { useAuth } from "../../context/AuthContext";
+import { useAuthStore } from "../../stores/useAuthStore";
 import { Link } from "react-router-dom";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -66,7 +66,8 @@ const resultSchema = yup.object({
 function EditMatch() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const token = useAuthStore((state) => state.token);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
   const [match, setMatch] = useState(null);
   const [teams, setTeams] = useState([]);
@@ -75,20 +76,27 @@ function EditMatch() {
   const [resultMessage, setResultMessage] = useState("");
 
   useEffect(() => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     async function fetchData() {
       try {
-        const resMatch = await fetch(`http://localhost:5000/api/match/${id}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
-          },
-        });
+        const resMatch = await fetch(
+          `http://localhost:5000/api/matches/${id}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         const dataMatch = await resMatch.json();
 
         const response = await fetch("http://localhost:5000/api/admin/teams", {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         const dataTeams = await response.json();
@@ -102,16 +110,16 @@ function EditMatch() {
       }
     }
     fetchData();
-  }, [id, user.token]);
+  }, [id, token]);
 
   // Handler mise à jour match
   const handleUpdate = async (values) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/match/${id}`, {
+      const res = await fetch(`http://localhost:5000/api/matches/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(values),
       });
@@ -129,24 +137,35 @@ function EditMatch() {
   // Handler résultat final
   const handleResultSubmit = async (values) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/match/${id}/result`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify(values),
-      });
+      const res = await fetch(
+        `http://localhost:5000/api/matches/${id}/result`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(values),
+        }
+      );
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Erreur serveur");
 
       setResultMessage("Résultat final enregistré et gains calculés !");
-      navigate("/admin/gestion-match");
+      setTimeout(() => navigate("/admin/gestion-match"), 1500);
     } catch (err) {
       console.error(err);
       setResultMessage("Erreur lors de l'enregistrement du résultat");
     }
   };
+
+  if (!isLoggedIn) {
+    return (
+      <p className="text-red-600 text-center py-8">
+        Vous devez être connecté pour modifier un match.
+      </p>
+    );
+  }
 
   if (loading) return <p className="mt-10 text-center">Chargement...</p>;
   if (!match)

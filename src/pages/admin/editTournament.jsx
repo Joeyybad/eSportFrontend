@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import Card from "../../components/layout/Card";
 import Form from "../../components/ui/Form";
 import Button from "../../components/ui/Button";
-import { useAuth } from "../../context/AuthContext";
+import { useAuthStore } from "../../stores/useAuthStore";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 
@@ -22,26 +22,32 @@ const tournamentSchema = yup.object({
     ),
   status: yup
     .string()
-    .oneOf(["upcoming", "active", "completed"])
+    .oneOf(["scheduled", "live", "completed"])
     .required("Statut requis"),
 });
 
 function EditTournament() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const token = useAuthStore((state) => state.token);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
   const [tournament, setTournament] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    if (!token) {
+      setLoading(false);
+      setMessage("Vous devez être connecté pour accéder à cette page.");
+      return;
+    }
     const fetchTournament = async () => {
       try {
         const res = await fetch(`http://localhost:5000/api/tournaments/${id}`, {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         const data = await res.json();
@@ -56,7 +62,7 @@ function EditTournament() {
     };
 
     fetchTournament();
-  }, [id, user.token]);
+  }, [id, token]);
 
   // Handler mise à jour
   const handleUpdate = async (values) => {
@@ -65,7 +71,7 @@ function EditTournament() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(values),
       });
@@ -73,7 +79,7 @@ function EditTournament() {
       if (!res.ok) throw new Error(data.message || "Erreur serveur");
 
       setMessage("Tournoi modifié avec succès !");
-      setTimeout(() => navigate("/admin/gestion-tournoi"), 1500);
+      setTimeout(() => navigate("/admin/gestion-tournament"), 1500);
     } catch (err) {
       console.error(err);
       setMessage("Erreur lors de la modification du tournoi");
@@ -92,7 +98,7 @@ function EditTournament() {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       const data = await res.json();
@@ -105,7 +111,13 @@ function EditTournament() {
       setMessage("Erreur lors de la suppression du tournoi");
     }
   };
-
+  if (!isLoggedIn) {
+    return (
+      <p className="text-red-600 text-center py-8">
+        Vous devez être connecté pour modifier un tournoi.
+      </p>
+    );
+  }
   if (loading) return <p className="mt-10 text-center">Chargement...</p>;
   if (!tournament)
     return <p className="text-red-600 text-center">Tournoi introuvable</p>;
@@ -145,8 +157,8 @@ function EditTournament() {
       label: "Statut",
       type: "select",
       options: [
-        { value: "upcoming", label: "À venir" },
-        { value: "active", label: "Actif" },
+        { value: "scheduled", label: "À venir" },
+        { value: "live", label: "En direct" },
         { value: "completed", label: "Terminé" },
       ],
       defaultValue: tournament.status,

@@ -85,7 +85,7 @@ function Tournament() {
               {/* --- Team Home --- */}
               <div className="flex items-center gap-3">
                 <img
-                  src={`http://localhost:5000${match.homeTeam.logo}`}
+                  src={`http://localhost:5000/uploads/${match.homeTeam.logo}`}
                   alt=""
                   className="w-14 h-14 md:w-16 md:h-16 object-contain rounded"
                 />
@@ -97,7 +97,7 @@ function Tournament() {
               {/* --- Team Away --- */}
               <div className="flex items-center gap-3">
                 <img
-                  src={`http://localhost:5000${match.awayTeam.logo}`}
+                  src={`http://localhost:5000/uploads/${match.awayTeam.logo}`}
                   alt=""
                   className="w-14 h-14 md:w-16 md:h-16 object-contain rounded"
                 />

@@ -4,7 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuthStore } from "../../stores/useAuthStore";
 
 // Schéma de validation
 const schema = yup.object({
@@ -23,7 +23,8 @@ const schema = yup.object({
 });
 
 function NewTournament() {
-  const { user } = useAuth();
+  const token = useAuthStore((state) => state.token);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const navigate = useNavigate();
 
   const [message, setMessage] = useState("");
@@ -31,14 +32,14 @@ function NewTournament() {
 
   // Charger la liste des jeux existants via les équipes (même logique que NewMatch)
   useEffect(() => {
-    if (!user?.token) return;
+    if (!isLoggedIn) return;
 
     const fetchGames = async () => {
       try {
         const response = await fetch("http://localhost:5000/api/admin/teams", {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user?.token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -58,19 +59,26 @@ function NewTournament() {
     };
 
     fetchGames();
-  }, [user]);
+  }, [isLoggedIn, token]);
 
   // Soumission formulaire
   const onSubmit = async (formData) => {
+    if (!token) {
+      setMessage("Vous n'êtes pas autorisé à créer un tournoi.");
+      return;
+    }
     try {
-      const response = await fetch("http://localhost:5000/api/tournaments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user?.token}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/tournaments/create",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
       const data = await response.json();
 

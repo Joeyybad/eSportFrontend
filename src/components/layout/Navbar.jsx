@@ -11,14 +11,26 @@ import {
   Swords,
 } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../stores/useAuthStore";
+// L'import de 'shallow' n'est plus nécessaire avec la méthode atomique
 
 function Navbar() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
-  const navigate = useNavigate();
-  const { user, setUser } = useAuth(); //récupère user depuis le contexte
+
+  // --- CORRECTION ZUSTAND ---
+  // Au lieu de récupérer un objet (qui change de référence à chaque render),
+  // on récupère chaque valeur individuellement. C'est beaucoup plus stable pour React.
+  const username = useAuthStore((state) => state.username);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const role = useAuthStore((state) => state.role);
+  const logout = useAuthStore((state) => state.logout);
+  // ---------------------------
+
+  // On utilise des noms plus clairs pour l'affichage conditionnel
+  const userIsAdmin = role === "admin";
+  const userIsLoggedIn = isLoggedIn;
+
   return (
     <nav className="fixed left-0 bottom-0 lg:top-0 lg:bottom-auto z-50 w-full bg-white shadow-md border-t border-gray-200 lg:border-none">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 lg:px-8 py-3">
@@ -90,7 +102,7 @@ function Navbar() {
           </NavLink>
 
           {/* --- Menu Admin --- */}
-          {user?.role === "admin" && (
+          {userIsAdmin && (
             <div className="relative">
               {/* Admin dropdown desktop (CLICK instead of hover) */}
               <div className="hidden md:flex items-center gap-1 relative">
@@ -211,7 +223,7 @@ function Navbar() {
 
         {/* --- Bloc droite : User / Connexion --- */}
         <div className="flex-1 flex justify-end items-center gap-3 relative ">
-          {user?.isLoggedIn ? (
+          {userIsLoggedIn ? (
             <>
               {/* Desktop user menu */}
               <div className="hidden md:block relative">
@@ -221,7 +233,7 @@ function Navbar() {
                 >
                   <User className="w-6 h-6 text-gray-700" />
                   <span className="font-medium text-purple-600 hover:text-indigo-600 text-sm mt-1">
-                    {user?.username}
+                    {username}
                   </span>
                 </button>
                 {userOpen && (
@@ -236,15 +248,7 @@ function Navbar() {
                       Mes gains
                     </Link>
                     <button
-                      onClick={() => {
-                        setUser({
-                          isLoggedIn: false,
-                          role: "",
-                          username: "",
-                          email: "",
-                        });
-                        navigate("/login");
-                      }}
+                      onClick={logout}
                       className="text-left px-4 py-2 hover:bg-gray-100 transition"
                     >
                       Déconnexion
@@ -261,7 +265,7 @@ function Navbar() {
                 >
                   <User className="w-6 h-6 text-gray-700" />
                   <span className="font-medium  text-purple-600 hover:text-indigo-600 text-sm mt-1">
-                    {user?.username}
+                    {username}
                   </span>
                 </button>
                 {userOpen && (
@@ -276,15 +280,7 @@ function Navbar() {
                       Mes gains
                     </Link>
                     <button
-                      onClick={() => {
-                        setUser({
-                          isLoggedIn: false,
-                          role: "",
-                          username: "",
-                          email: "",
-                        });
-                        navigate("/login");
-                      }}
+                      onClick={logout}
                       className="text-left px-4 py-2 hover:bg-gray-100 transition"
                     >
                       Déconnexion

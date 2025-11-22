@@ -4,7 +4,7 @@ import Form from "../components/ui/Form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../stores/useAuthStore";
 
 // Schéma de validation avec Yup
 const schema = yup.object({
@@ -16,7 +16,9 @@ const schema = yup.object({
 
 // Composant de la page de contact
 function Contact() {
-  const { user } = useAuth();
+  const token = useAuthStore((state) => state.token);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+
   const [message, setMessage] = useState("");
   const onSubmit = async (formData) => {
     try {
@@ -26,7 +28,7 @@ function Contact() {
         email: formData.email,
         sujet: formData.sujet,
         message: formData.message,
-        userId: user ? user.id : null,
+        userId: isLoggedIn ? token.userId : null,
       };
       console.log("Payload envoyé :", payload);
       const response = await fetch("http://localhost:5000/api/contact", {

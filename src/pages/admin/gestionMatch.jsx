@@ -4,11 +4,12 @@ import StatusBadge from "../../components/ui/StatusBadge";
 import Card from "../../components/layout/Card";
 import { Pencil, Trash2 } from "lucide-react";
 import Button from "../../components/ui/Button";
-import { useAuth } from "../../context/AuthContext";
+import { useAuthStore } from "../../stores/useAuthStore";
 import Modal from "../../components/ui/Modal";
 
 function GestionMatch() {
-  const { user } = useAuth();
+  const token = useAuthStore((state) => state.token);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   //  États pour la modale
@@ -24,14 +25,22 @@ function GestionMatch() {
 
   //  Suppression confirmée
   const confirmDelete = async () => {
+    if (!token) {
+      alert(
+        "Erreur: Jeton d'authentification manquant. Opération non autorisée."
+      );
+      setShowDeleteModal(false);
+      setMatchToDelete(null);
+      return;
+    }
     try {
       const res = await fetch(
-        `http://localhost:5000/api/match/${matchToDelete.id}`,
+        `http://localhost:5000/api/matches/${matchToDelete.id}`,
         {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -77,6 +86,14 @@ function GestionMatch() {
 
     fetchMatches();
   }, []);
+
+  if (!isLoggedIn) {
+    return (
+      <p className="text-red-600 text-center py-8">
+        Vous devez être connecté pour gérer les matchs.
+      </p>
+    );
+  }
 
   if (loading) return <p>Chargement…</p>;
 

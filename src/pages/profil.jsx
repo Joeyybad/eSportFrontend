@@ -1,33 +1,50 @@
 import Card from "../components/layout/Card";
 import Button from "../components/ui/Button";
 import Modal from "../components/ui/Modal";
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../stores/useAuthStore";
 import { useState, useEffect } from "react";
 
 function Profile() {
-  const { user } = useAuth();
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const token = useAuthStore((state) => state.token);
+
+  const storeUsername = useAuthStore((state) => state.username);
+  const storeEmail = useAuthStore((state) => state.email);
+  const setUserProfile = useAuthStore((state) => state.setUserProfile);
+  // --------------------------------------------------
+
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState("");
+  const [avatarFile, setAvatarFile] = useState(null);
+
+  const handleFileChange = (e) => {
+    setAvatarFile(e.target.files[0]);
+  };
+
+  // Initialisation du formulaire (vide au départ)
   const [formData, setFormData] = useState({
-    username: profile?.username || "",
-    avatar: profile?.avatar || "",
-    favoritesGames: profile?.favoritesGames?.join(", ") || "",
-    favoritesTeams: profile?.favoritesTeams?.join(", ") || "",
+    username: "",
+    birthdate: "",
+    avatar: "",
+    favoritesGames: "",
+    favoritesTeams: "",
   });
 
   // Récupération des données du profil au chargement
   useEffect(() => {
-    if (!user?.isLoggedIn) return;
+    if (!isLoggedIn) {
+      setLoading(false);
+      return;
+    }
 
     const fetchProfile = async () => {
       try {
-        // console.log("Profil demandé pour ID :", user.id);
-        // console.log("User du token :", user);
         const response = await fetch("http://localhost:5000/api/user/profile", {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -47,17 +64,21 @@ function Profile() {
     };
 
     fetchProfile();
-  }, [user]);
+  }, [isLoggedIn, token]);
 
   // Préremplissage du formulaire quand le profil est chargé
   useEffect(() => {
     if (profile) {
       setFormData({
-        username: profile.username,
-        birthdate: profile.birthdate,
-        avatar: profile.avatar,
-        favoritesGames: profile.favoritesGames.join(", "),
-        favoritesTeams: profile.favoritesTeams.join(", "),
+        username: profile.username || "",
+        birthdate: profile.birthdate
+          ? new Date(profile.birthdate).toISOString().split("T")[0]
+          : "",
+        avatar: profile.avatar || "",
+        favoritesGames:
+          (profile.favoritesGames && profile.favoritesGames.join(", ")) || "",
+        favoritesTeams:
+          (profile.favoritesTeams && profile.favoritesTeams.join(", ")) || "",
       });
     }
   }, [profile]);
@@ -66,38 +87,97 @@ function Profile() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // gestion sauvegarde
+  // Gestion sauvegarde
   const handleSave = async () => {
     try {
+      const payload = {
+        ...formData,
+        // Conversion des chaînes en tableaux pour l'envoi
+        favoritesGames: formData.favoritesGames
+          .split(",")
+          .map((g) => g.trim())
+          .filter((g) => g),
+        favoritesTeams: formData.favoritesTeams
+          .split(",")
+          .map((t) => t.trim())
+          .filter((t) => t),
+      };
+
+      const dataToSend = new FormData();
+
+      // 1. AJOUTER LES CHAMPS TEXTE (stringifiés pour les tableaux)
+      dataToSend.append("username", payload.username);
+      dataToSend.append("birthdate", payload.birthdate);
+      dataToSend.append(
+        "favoritesGames",
+        JSON.stringify(payload.favoritesGames)
+      );
+      dataToSend.append(
+        "favoritesTeams",
+        JSON.stringify(payload.favoritesTeams)
+      );
+      if (avatarFile) {
+        dataToSend.append("avatar", avatarFile);
+      }
+      // Si vous permettez la modification du mot de passe
+      // if (formData.password) {
+      //    dataToSend.append("password", formData.password);
+      // }
+
       const response = await fetch("http://localhost:5000/api/user/profile", {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          ...formData,
-          favoritesGames: formData.favoritesGames
-            .split(",")
-            .map((g) => g.trim()),
-          favoritesTeams: formData.favoritesTeams
-            .split(",")
-            .map((t) => t.trim()),
-        }),
+        body: dataToSend,
       });
 
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.message || "Erreur API");
 
-      setProfile(data.user);
+      // L'objet 'user' dans la réponse est potentiellement undefined si le contrôleur
+      // ne l'enveloppe pas correctement. On utilise la sécurité pour éviter le crash.
+      const updatedUser = data?.user;
+
+      if (!updatedUser) {
+        // Gérer le cas où la requête réussit mais l'objet 'user' est manquant dans le corps de réponse.
+        setUpdateMessage(
+          "Profil mis à jour, mais l'affichage nécessite un rafraîchissement."
+        );
+      } else {
+        // Mise à jour de l'état local
+        setProfile(updatedUser);
+
+        // Mise à jour du store global (Header, etc.)
+        setUserProfile({
+          // Utilisation de l'opérateur de chaînage optionnel (?. ) et de ||
+          username: updatedUser.username || storeUsername,
+          email: updatedUser.email || storeEmail,
+        });
+
+        setUpdateMessage("Profil mis à jour avec succès !");
+      }
+
       setShowModal(false);
     } catch (error) {
       console.error("Erreur lors de la mise à jour :", error);
+      // Met à jour le message d'erreur si disponible
+      const errorMessage = error.message.includes("Erreur API")
+        ? "Erreur lors de la mise à jour (vérifiez le format des données)."
+        : "Impossible de contacter le serveur.";
+
+      setUpdateMessage(errorMessage);
       alert("Impossible de mettre à jour le profil.");
     }
   };
 
+  if (!isLoggedIn)
+    return (
+      <p className="text-red-600">
+        Vous devez être connecté pour voir votre profil.
+      </p>
+    );
   if (loading) return <p className="text-purple-600">Chargement...</p>;
   if (!profile)
     return <p className="text-red-600">Impossible de récupérer le profil</p>;
@@ -109,9 +189,9 @@ function Profile() {
       <Card title="Mon profil" subtitle="Informations personnelles">
         <div className="flex flex-col gap-2 text-center">
           <img
-            src={profile.avatar || "/default-avatar.png"}
+            src={`http://localhost:5000/uploads/${profile.avatar}`}
             alt="Avatar utilisateur"
-            className="w-24 h-24 rounded-full mx-auto"
+            className="w-24 h-24 rounded-full mx-auto object-cover"
           />
           <p>
             <span className="font-semibold">Pseudo:</span> {profile.username}
@@ -142,6 +222,9 @@ function Profile() {
             />
           </div>
         </div>
+        {updateMessage && (
+          <p className="text-purple-600 mt-2 text-center">{updateMessage}</p>
+        )}
       </Card>
 
       {/* --- Modal --- */}
@@ -164,10 +247,9 @@ function Profile() {
               className="border p-2 rounded"
             />
             <input
-              type="text"
-              name="avatar"
-              value={formData.avatar}
-              onChange={handleChange}
+              type="file"
+              name="avatarFile"
+              onChange={handleFileChange}
               placeholder="URL de l'avatar"
               className="border p-2 rounded"
             />

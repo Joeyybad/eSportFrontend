@@ -1,22 +1,25 @@
 import Card from "../components/layout/Card";
 import { X, Check } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../stores/useAuthStore";
 import { useEffect, useState } from "react";
 
 function MyBets() {
-  const { user } = useAuth();
+  const token = useAuthStore((state) => state.token);
   const [bets, setBets] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
     const fetchBets = async () => {
       try {
         const res = await fetch("http://localhost:5000/api/bets/user", {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -33,7 +36,7 @@ function MyBets() {
     };
 
     fetchBets();
-  }, [user]);
+  }, [token]);
 
   if (loading) return <p className="text-purple-600">Chargement...</p>;
   if (!bets.length)
