@@ -19,7 +19,6 @@ export const useAuthStore = create(
 
       // Fonction de connexion
       login: (userData) => {
-        // userData est l'objet { token, user: {...} } du serveur
         set({
           isLoggedIn: true,
           token: userData.token,
@@ -38,8 +37,6 @@ export const useAuthStore = create(
               : state.username,
           email:
             profileData.email !== undefined ? profileData.email : state.email,
-          // Note: Si vous souhaitez stocker l'avatar dans le store global, ajoutez-le ici:
-          // avatar: profileData.avatar !== undefined ? profileData.avatar : state.avatar,
         }));
       },
 
@@ -49,7 +46,7 @@ export const useAuthStore = create(
     }),
     {
       name: "auth-storage", // Nom de la clé dans le localStorage
-      storage: createJSONStorage(() => localStorage), // Utilise le localStorage
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );

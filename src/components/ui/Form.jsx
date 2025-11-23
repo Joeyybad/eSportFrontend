@@ -43,7 +43,7 @@ function Form({
             <select
               {...register(field.name)}
               onChange={(e) => {
-                field.onChange?.(e); // Appelle la fonction si elle existe
+                field.onChange?.(e);
               }}
               className="border p-2 rounded"
             >
@@ -74,9 +74,9 @@ function Form({
       <Button
         text={submitLabel || "Envoyer"}
         type="submit"
-        color="#A855F7" // violet Tailwind (équivaut à bg-purple-600)
+        color="#A855F7"
         className="py-2 px-4 hover:bg-purple-700 transition"
-        style={{ color: "white" }} // texte blanc
+        style={{ color: "white" }}
       />
     </form>
   );

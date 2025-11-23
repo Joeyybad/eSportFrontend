@@ -12,22 +12,17 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "../../stores/useAuthStore";
-// L'import de 'shallow' n'est plus nécessaire avec la méthode atomique
 
 function Navbar() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
 
-  // --- CORRECTION ZUSTAND ---
-  // Au lieu de récupérer un objet (qui change de référence à chaque render),
-  // on récupère chaque valeur individuellement. C'est beaucoup plus stable pour React.
+  //  Gestion état
   const username = useAuthStore((state) => state.username);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const role = useAuthStore((state) => state.role);
   const logout = useAuthStore((state) => state.logout);
-  // ---------------------------
 
-  // On utilise des noms plus clairs pour l'affichage conditionnel
   const userIsAdmin = role === "admin";
   const userIsLoggedIn = isLoggedIn;
 
@@ -104,7 +99,7 @@ function Navbar() {
           {/* --- Menu Admin --- */}
           {userIsAdmin && (
             <div className="relative">
-              {/* Admin dropdown desktop (CLICK instead of hover) */}
+              {/* Admin dropdown desktop/tablette */}
               <div className="hidden md:flex items-center gap-1 relative">
                 <button
                   onClick={() => setAdminOpen(!adminOpen)}
@@ -120,7 +115,7 @@ function Navbar() {
                 </button>
 
                 {adminOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-40 bg-white border rounded shadow-lg z-50">
+                  <div className="absolute right-0 bottom-full mb-2 lg:top-full lg:bottom-auto lg:mt-2 lg:mb-0 w-40 bg-white border rounded shadow-lg z-50">
                     <Link
                       to="/admin/new-team"
                       className="block px-4 py-2 hover:bg-gray-100"
@@ -161,7 +156,7 @@ function Navbar() {
                 )}
               </div>
 
-              {/* Mobile dropdown reste identique */}
+              {/* Mobile dropdown (< md) */}
               <div className="flex md:hidden flex-col items-center relative">
                 <button
                   onClick={() => setAdminOpen(!adminOpen)}
@@ -225,7 +220,7 @@ function Navbar() {
         <div className="flex-1 flex justify-end items-center gap-3 relative ">
           {userIsLoggedIn ? (
             <>
-              {/* Desktop user menu */}
+              {/* Desktop/Tablet user menu */}
               <div className="hidden md:block relative">
                 <button
                   onClick={() => setUserOpen(!userOpen)}
@@ -237,7 +232,7 @@ function Navbar() {
                   </span>
                 </button>
                 {userOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white border rounded shadow-lg flex flex-col z-50">
+                  <div className="absolute right-0 bottom-full mb-2 lg:top-full lg:bottom-auto lg:mt-2 lg:mb-0 w-48 bg-white border rounded shadow-lg flex flex-col z-50">
                     <Link to="/profile" className="px-4 py-2 hover:bg-gray-100">
                       Profil
                     </Link>

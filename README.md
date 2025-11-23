@@ -15,8 +15,14 @@ Git
 - démarrage npm run dev
 
 url locale : http://localhost:5173
-
+(Attention au mode sombre par défaut du navigateur)
 le serveur back-end n'autorise que les requêtes de cette url locale, via la configuration Cors dans son fichier app.js
+
+Pour une Inscription et navigation sur les fonctionnalités rapide copier coller:
+
+- Création d'un compte avec le mot de passe => MonMdp123! convient très bien pour les tests mais sinon 14 caractères selon les recommandations
+- Commande sql pour passer l'user en admin et avoir accès au panel admin => UPDATE users SET isAdmin = 1 WHERE id = 1;
+- Après avoir crée les équipes matchs tournois ect, création d'un second User pour effectuer les paris et observer
 
 # Choix technologiques & justification
 

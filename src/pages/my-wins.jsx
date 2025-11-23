@@ -3,12 +3,14 @@ import Card from "../components/layout/Card";
 import Button from "../components/ui/Button";
 import { useAuthStore } from "../stores/useAuthStore";
 
+//Composant de la page mes gains
 function MyWins() {
+  //Gestion d'état
   const token = useAuthStore((state) => state.token);
+
   const [wins, setWins] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Charger les bets du user
   useEffect(() => {
     if (!token) {
       setLoading(false);
@@ -27,7 +29,6 @@ function MyWins() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Erreur API");
 
-        // Garder uniquement les paris gagnés
         const filteredWins = data.filter((b) => b.status === "won");
 
         setWins(filteredWins);

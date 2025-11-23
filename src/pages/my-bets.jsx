@@ -3,8 +3,11 @@ import { X, Check } from "lucide-react";
 import { useAuthStore } from "../stores/useAuthStore";
 import { useEffect, useState } from "react";
 
+//Composant de la page mes paris
 function MyBets() {
+  //Gestion d'état
   const token = useAuthStore((state) => state.token);
+
   const [bets, setBets] = useState([]);
   const [loading, setLoading] = useState(true);
 

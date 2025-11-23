@@ -3,6 +3,7 @@ import Card from "../components/layout/Card";
 import { Link } from "react-router-dom";
 import StatusBadge from "../components/ui/StatusBadge";
 
+//composant page d'accueil
 function Home() {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +43,6 @@ function Home() {
         />
       </div>
 
-      {/* Deux colonnes */}
       <div className="max-w-5xl mx-auto px-4 mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Matchs en cours */}
         <Card title="Matchs en cours" className="border-green-300 border-1">

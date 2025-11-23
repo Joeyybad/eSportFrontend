@@ -5,7 +5,9 @@ import Button from "../components/ui/Button";
 import StatusBadge from "../components/ui/StatusBadge";
 import { useAuthStore } from "../stores/useAuthStore";
 
+//Composant de la page match
 function Match() {
+  //Gestion d'état
   const token = useAuthStore((state) => state.token);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
@@ -49,6 +51,7 @@ function Match() {
     }
 
     try {
+      //Formattage et vérification de l'amount
       const formattedAmount = parseFloat(amount.toString().replace(",", "."));
 
       if (isNaN(formattedAmount) || formattedAmount <= 0) {
@@ -58,7 +61,7 @@ function Match() {
 
       const payload = {
         matchId: match.id,
-        amount: formattedAmount, // On envoie la version corrigée (ex: 1.2)
+        amount: formattedAmount,
         prediction: selectedPrediction,
       };
 
@@ -111,6 +114,7 @@ function Match() {
         }
         centerHeader={false}
       >
+        {/* Si il y a une phase et un tournois en lien avec le match */}
         {match.phase ? `  Phase : ${match.phase}` : ""}{" "}
         {match.Tournament?.name ? ` | Tournoi : ${match.Tournament.name}` : ""}
         {/* Logos */}

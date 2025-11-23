@@ -18,6 +18,7 @@ const schema = yup.object({
 
 // Composant de la page de connexion
 function Login() {
+  //Gestion d'état
   const login = useAuthStore((state) => state.login);
 
   const [message, setMessage] = useState("");
@@ -63,7 +64,7 @@ function Login() {
         submitLabel="Se connecter"
         resolver={yupResolver(schema)}
       />
-      {/* Message d'erreur ou de succès */}{" "}
+      {/* Message d'erreur ou de succès */}
       {message && (
         <p className="text-purple-600 text-center my-2 whitespace-pre-line">
           {message}{" "}

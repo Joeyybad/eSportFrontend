@@ -1,3 +1,5 @@
+// Fonctionnalité faq en dur, à passer en base de données
+
 import { useState } from "react";
 import Card from "../components/layout/Card";
 import { Link } from "react-router-dom";

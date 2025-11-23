@@ -1,3 +1,5 @@
+// Fonctionnalité à finir *
+
 import { Link } from "react-router-dom";
 import Card from "../components/layout/Card";
 import Form from "../components/ui/Form";
@@ -30,7 +32,8 @@ function Contact() {
         message: formData.message,
         userId: isLoggedIn ? token.userId : null,
       };
-      console.log("Payload envoyé :", payload);
+      // console.log("Payload envoyé :", payload);
+
       const response = await fetch("http://localhost:5000/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -4,10 +4,11 @@ import Modal from "../components/ui/Modal";
 import { useAuthStore } from "../stores/useAuthStore";
 import { useState, useEffect } from "react";
 
+//Composant de la page profile
 function Profile() {
+  //Gestion d'état
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const token = useAuthStore((state) => state.token);
-
   const storeUsername = useAuthStore((state) => state.username);
   const storeEmail = useAuthStore((state) => state.email);
   const setUserProfile = useAuthStore((state) => state.setUserProfile);
@@ -32,7 +33,6 @@ function Profile() {
     favoritesTeams: "",
   });
 
-  // Récupération des données du profil au chargement
   useEffect(() => {
     if (!isLoggedIn) {
       setLoading(false);
