@@ -17,6 +17,7 @@ function Match() {
   const [amount, setAmount] = useState("");
   const [selectedPrediction, setSelectedPrediction] = useState(null);
   const [message, setMessage] = useState("");
+  const [hasBet, setHasBet] = useState(false);
   useEffect(() => {
     const fetchMatch = async () => {
       try {
@@ -38,6 +39,40 @@ function Match() {
     };
     fetchMatch();
   }, [id]);
+
+  useEffect(() => {
+    if (isLoggedIn && match) {
+      // Dans un useEffect, on doit créer une fonction async interne et l'appeler
+      const checkUserBet = async () => {
+        try {
+          const response = await fetch(
+            "http://localhost:5000/api/user/profile",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+          const user = await response.json();
+
+          // ✅ LE LOG POUR VÉRIFIER QUE "Bets" EST BIEN LÀ
+          console.log("PROFIL REÇU DU BACKEND :", user);
+
+          // On regarde dans la liste des paris de l'utilisateur (user.Bets)
+          if (user.Bets && Array.isArray(user.Bets)) {
+            // Si on trouve un pari avec le même matchId, c'est gagné
+            const alreadyBet = user.Bets.some((b) => b.matchId === match.id);
+            if (alreadyBet) {
+              setHasBet(true);
+            }
+          }
+        } catch (err) {
+          console.error("Erreur check pari:", err);
+        }
+      };
+      // On lance la fonction
+      checkUserBet();
+    }
+  }, [isLoggedIn, match, token]);
 
   const handleBet = async () => {
     if (!token) {
@@ -114,11 +149,11 @@ function Match() {
         }
         centerHeader={false}
       >
-        {/* Si il y a une phase et un tournois en lien avec le match */}
-        {match.phase ? `  Phase : ${match.phase}` : ""}{" "}
+        {/* Info supplémentaire (Tournoi / Phase) */}
+        {match.phase ? `Phase : ${match.phase}` : ""}{" "}
         {match.Tournament?.name ? ` | Tournoi : ${match.Tournament.name}` : ""}
-        {/* Logos */}
-        <div className="flex items-center justify-center gap-10 mb-4">
+        {/* Logos des équipes */}
+        <div className="flex items-center justify-center gap-10 mb-4 mt-4">
           {match.homeTeam?.logo && (
             <div className="w-20 h-20 md:w-16 md:h-16 flex items-center justify-center">
               <img
@@ -132,7 +167,6 @@ function Match() {
 
           {match.awayTeam?.logo && (
             <div className="w-20 h-20 md:w-16 md:h-16 flex items-center justify-center">
-              {" "}
               <img
                 src={`http://localhost:5000/uploads/${match.awayTeam.logo}`}
                 alt={`${match.awayTeam.teamName} logo`}
@@ -141,73 +175,95 @@ function Match() {
             </div>
           )}
         </div>
-        {isCompleted ? ( // si le match est terminé
-          <p className="text-red-600 font-semibold text-md mt-4">
-            Les paris sont fermés : le match est terminé.
-          </p>
-        ) : isLoggedIn ? (
+        {/* LOGIQUE D'AFFICHAGE DU FORMULAIRE */}
+        {isCompleted ? (
+          // CAS 1 : Match terminé
           <>
-            <p className="mb-3">Place ton pari sur ton équipe favorite :</p>
-
-            {/* Boutons de prédiction */}
-
-            <div className="flex gap-3 justify-center mb-4">
-              <button
-                onClick={() => setSelectedPrediction("home")}
-                className={`px-3 py-1.5 rounded transition ${
-                  selectedPrediction === "home"
-                    ? "bg-purple-700 text-black"
-                    : "bg-purple-600 text-black hover:bg-purple-700"
-                }`}
-              >
-                {match.homeTeam?.teamName} ({match.oddsHome})
-              </button>
-
-              <button
-                onClick={() => setSelectedPrediction("draw")}
-                className={`px-3 py-1.5 rounded transition ${
-                  selectedPrediction === "draw"
-                    ? "bg-gray-400 text-purple-700"
-                    : "bg-gray-200 text-purple-600 hover:bg-gray-300"
-                }`}
-              >
-                Match nul ({match.oddsDraw})
-              </button>
-
-              <button
-                onClick={() => setSelectedPrediction("away")}
-                className={`px-3 py-1.5 rounded transition ${
-                  selectedPrediction === "away"
-                    ? "bg-purple-700 text-black"
-                    : "bg-purple-600 text-black hover:bg-purple-700"
-                }`}
-              >
-                {match.awayTeam?.teamName} ({match.oddsAway})
-              </button>
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4">
+              <strong className="font-bold">
+                Les paris sont fermés : le match est terminé.
+              </strong>
             </div>
-            <div className="flex flex-col items-center gap-2 mb-4">
-              <input
-                type="number"
-                min="1"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="Montant à miser (€)"
-                className="border border-gray-300 rounded p-2 w-40 text-center"
-              />
-              <Button
-                text="Valider le pari"
-                color="#9333EA"
-                onClick={handleBet}
-                style={{ color: "white" }}
-              />
-            </div>
+          </>
+        ) : isLoggedIn ? (
+          // CAS 2 : Utilisateur connecté
+          <>
+            {hasBet ? (
+              // CAS 2A : A déjà parié -> On affiche le message de succès
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mt-4">
+                <strong className="font-bold">Déjà joué !</strong>
+                <span className="block sm:inline">
+                  Tu as déjà parié sur ce match. Bonne chance !
+                </span>
+              </div>
+            ) : (
+              // CAS 2B : N'a pas encore parié -> On affiche le formulaire
+              <>
+                <p className="mb-3">Place ton pari sur ton équipe favorite :</p>
 
-            {message && (
-              <p className="text-sm mt-2 text-purple-600">{message}</p>
+                {/* Boutons de prédiction */}
+                <div className="flex gap-3 justify-center mb-4">
+                  <button
+                    onClick={() => setSelectedPrediction("home")}
+                    className={`px-3 py-1.5 rounded transition ${
+                      selectedPrediction === "home"
+                        ? "bg-purple-700 text-white"
+                        : "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                    }`}
+                  >
+                    {match.homeTeam?.teamName} ({match.oddsHome})
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedPrediction("draw")}
+                    className={`px-3 py-1.5 rounded transition ${
+                      selectedPrediction === "draw"
+                        ? "bg-gray-600 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
+                  >
+                    Nul ({match.oddsDraw})
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedPrediction("away")}
+                    className={`px-3 py-1.5 rounded transition ${
+                      selectedPrediction === "away"
+                        ? "bg-purple-700 text-white"
+                        : "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                    }`}
+                  >
+                    {match.awayTeam?.teamName} ({match.oddsAway})
+                  </button>
+                </div>
+
+                {/* Input Montant et Validation */}
+                <div className="flex flex-col items-center gap-2 mb-4">
+                  <input
+                    type="number"
+                    min="1"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="Montant à miser (€)"
+                    className="border border-gray-300 rounded p-2 w-40 text-center"
+                  />
+                  <Button
+                    text="Valider le pari"
+                    color="#9333EA"
+                    onClick={handleBet}
+                    style={{ color: "white" }}
+                  />
+                </div>
+
+                {/* Message d'erreur (affiché uniquement si pas encore parié) */}
+                {message && (
+                  <p className="text-sm mt-2 text-purple-600">{message}</p>
+                )}
+              </>
             )}
           </>
         ) : (
-          // Si le match n'est pas terminé mais que l'utilisateur n'est pas connecté
+          // CAS 3 : Pas connecté
           <p className="text-purple-600 font-semibold text-md mt-4">
             Connecte-toi pour placer un pari sur ce match !
           </p>

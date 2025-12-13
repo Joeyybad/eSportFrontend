@@ -55,7 +55,7 @@ function Home() {
                   to={`/match/${match.id}`}
                   className="font-semibold text-purple-600 hover:underline"
                 >
-                  {match.homeTeam.teamName} vs {match.awayTeam.teamName} ({})
+                  {match.homeTeam.teamName} vs {match.awayTeam.teamName}
                 </Link>
                 <div className="mt-1 flex justify-center">
                   <StatusBadge status={match.status} />

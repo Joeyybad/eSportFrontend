@@ -4,6 +4,7 @@ import Card from "../components/layout/Card";
 import Button from "../components/ui/Button";
 import StatusBadge from "../components/ui/StatusBadge";
 
+// Composant de la page Matchs
 function Matchs() {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);

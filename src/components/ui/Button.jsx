@@ -6,9 +6,11 @@ function Button({
   className = "",
   style = {},
   children,
+  type = "button",
 }) {
   return (
     <button
+      type={type}
       onClick={onClick}
       className={` rounded-md font-medium transition ${className}`}
       style={{

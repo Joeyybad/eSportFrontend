@@ -8,13 +8,13 @@ function Footer() {
       <div className="flex flex-col md:flex-row justify-between items-center px-4 py-2 md:py-3 text-sm md:text-base">
         {/* Icônes réseaux sociaux */}
         <div className="flex items-center gap-3 mb-2 md:mb-0 text-gray-700">
-          <a href="#">
+          <a href="https://www.facebook.com/">
             <FaFacebookF />
           </a>
-          <a href="#">
+          <a href="https://x.com/">
             <FaTwitter />
           </a>
-          <a href="#">
+          <a href="https://www.instagram.com/">
             <FaInstagram />
           </a>
         </div>

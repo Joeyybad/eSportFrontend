@@ -43,6 +43,7 @@ function Form({
             <select
               {...register(field.name)}
               onChange={(e) => {
+                register(field.name).onChange(e);
                 field.onChange?.(e);
               }}
               className="border p-2 rounded"
