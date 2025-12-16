@@ -17,42 +17,14 @@ const matchSchema = yup.object({
       [yup.ref("homeTeamId")],
       "Une équipe ne peut pas jouer contre elle-même"
     ),
-  date: yup
-    .date()
-    .typeError("Date invalide")
-    .required("Date requise")
-    .test(
-      "is-later-than-original",
-      "La nouvelle date doit être après la date initiale du match",
-      function (value) {
-        const originalDate = this.options.context?.originalDate;
-        if (!value) return false; // requis
-        if (!originalDate) return true; // pas de date initiale donnée, on laisse passer
-        return value.getTime() > new Date(originalDate).getTime();
-      }
-    ),
+  date: yup.date().typeError("Date invalide").required("Date requise"),
   status: yup
     .string()
     .oneOf(["scheduled", "live", "completed", "cancelled"])
     .required("Statut requis"),
-  oddsHome: yup
-    .number()
-    .typeError("Doit être un nombre")
-    .positive("Doit être positive")
-    .test("maxDecimals", "2 décimales max", (v) => /^\d+(\.\d{1,2})?$/.test(v))
-    .required(),
-  oddsDraw: yup
-    .number()
-    .typeError("Doit être un nombre")
-    .positive()
-    .test("maxDecimals", "2 décimales max", (v) => /^\d+(\.\d{1,2})?$/.test(v))
-    .required(),
-  oddsAway: yup
-    .number()
-    .typeError("Doit être un nombre")
-    .positive()
-    .test("maxDecimals", "2 décimales max", (v) => /^\d+(\.\d{1,2})?$/.test(v))
-    .required(),
+  oddsHome: yup.number().positive().required(),
+  oddsDraw: yup.number().positive().required(),
+  oddsAway: yup.number().positive().required(),
 });
 
 // Validation Yup pour le résultat final
@@ -70,7 +42,7 @@ function EditMatch() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
   const [match, setMatch] = useState(null);
-  const [teams, setTeams] = useState([]);
+  const [teams, setTeams] = useState([]); // Initialisé tableau vide
   const [loading, setLoading] = useState(true);
   const [modifMessage, setModifMessage] = useState("");
   const [resultMessage, setResultMessage] = useState("");
@@ -82,6 +54,7 @@ function EditMatch() {
     }
     async function fetchData() {
       try {
+        // 1. Récupération du match (Pas de changement ici, ça renvoie un objet unique)
         const resMatch = await fetch(
           `http://localhost:5000/api/matches/${id}`,
           {
@@ -93,16 +66,23 @@ function EditMatch() {
         );
         const dataMatch = await resMatch.json();
 
-        const response = await fetch("http://localhost:5000/api/admin/teams", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        // 2. ✅ CORRECTION RÉCUPÉRATION ÉQUIPES
+        // On ajoute limit=100 (ou plus) pour être sûr d'avoir toutes les équipes dans le menu déroulant
+        const response = await fetch(
+          "http://localhost:5000/api/admin/teams?limit=100",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         const dataTeams = await response.json();
 
         setMatch(dataMatch);
-        setTeams(dataTeams);
+
+        // ✅ CIBLE LE TABLEAU DANS L'OBJET PAGINÉ
+        setTeams(dataTeams.teams || []);
       } catch (err) {
         console.error("Erreur :", err);
       } finally {
@@ -171,19 +151,25 @@ function EditMatch() {
   if (!match)
     return <p className="text-red-600 text-center">Match introuvable</p>;
 
+  // ✅ SÉCURISATION DU MAP POUR LES OPTIONS
+  // On s'assure que 'teams' est bien un tableau avant de faire le .map
+  const teamOptions = Array.isArray(teams)
+    ? teams.map((t) => ({ value: String(t.id), label: t.teamName }))
+    : [];
+
   const matchFields = [
     {
       name: "homeTeamId",
       label: "Équipe domicile",
       type: "select",
-      options: teams.map((t) => ({ value: String(t.id), label: t.teamName })),
+      options: teamOptions, // Utilisation de la variable sécurisée
       defaultValue: String(match.homeTeamId),
     },
     {
       name: "awayTeamId",
       label: "Équipe extérieure",
       type: "select",
-      options: teams.map((t) => ({ value: String(t.id), label: t.teamName })),
+      options: teamOptions, // Utilisation de la variable sécurisée
       defaultValue: String(match.awayTeamId),
     },
     {
@@ -233,12 +219,19 @@ function EditMatch() {
       label: "Résultat",
       type: "select",
       options: [
-        { value: "home", label: `${match.homeTeam.teamName} gagne` },
+        {
+          value: "home",
+          label: `${match.homeTeam?.teamName || "Domicile"} gagne`,
+        },
         { value: "draw", label: "Match nul" },
-        { value: "away", label: `${match.awayTeam.teamName} gagne` },
+        {
+          value: "away",
+          label: `${match.awayTeam?.teamName || "Extérieur"} gagne`,
+        },
       ],
     },
   ];
+
   return (
     <div className="max-w-4xl mx-auto mt-10 flex flex-col gap-6">
       <Card title="Modifier le match">

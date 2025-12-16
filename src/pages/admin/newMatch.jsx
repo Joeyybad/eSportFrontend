@@ -24,28 +24,17 @@ const schema = yup.object({
     .required("Date et heure du match requises"),
   oddsHome: yup
     .number()
-    .typeError("La cote doit être un nombre decimal")
+    .typeError("La cote doit être un nombre")
     .positive("La cote doit être positive")
-    .test("maxDecimals", "La cote ne peut avoir que 2 décimales", (value) =>
-      /^\d+(\.\d{1,2})?$/.test(value)
-    )
     .required("Cote équipe domicile requise"),
   oddsDraw: yup
     .number()
-    .typeError("La cote doit être un nombre decimal")
-    .positive()
-    .test("maxDecimals", "La cote ne peut avoir que 2 décimales", (value) =>
-      /^\d+(\.\d{1,2})?$/.test(value)
-    )
+    .typeError("La cote doit être un nombre")
     .required("Cote match nul requise"),
-
   oddsAway: yup
     .number()
-    .typeError("La cote doit être un nombre decimal")
+    .typeError("La cote doit être un nombre")
     .positive("La cote doit être positive")
-    .test("maxDecimals", "La cote ne peut avoir que 2 décimales", (value) =>
-      /^\d+(\.\d{1,2})?$/.test(value)
-    )
     .required("Cote équipe extérieure requise"),
 });
 
@@ -55,16 +44,67 @@ function NewMatch() {
   const navigate = useNavigate();
 
   const [message, setMessage] = useState("");
-  const [teams, setTeams] = useState([]);
-  const [tournaments, setTournaments] = useState([]);
-  const [selectedTournament, setSelectedTournament] = useState("");
-  const [games, setGames] = useState([]);
-  const [selectedHomeTeam, setSelectedHomeTeam] = useState("");
-  const [selectedGame, setSelectedGame] = useState("");
 
-  // Charger les tournois correspondant au jeu sélectionné
+  // Données brutes complètes
+  const [allTeams, setAllTeams] = useState([]);
+
+  // Données filtrées pour l'affichage
+  const [games, setGames] = useState([]);
+  const [teamsForSelectedGame, setTeamsForSelectedGame] = useState([]);
+  const [tournaments, setTournaments] = useState([]);
+
+  // États de sélection
+  const [selectedGame, setSelectedGame] = useState("");
+  const [selectedHomeTeam, setSelectedHomeTeam] = useState("");
+  const [selectedTournament, setSelectedTournament] = useState("");
+
+  // Cela nous permet de déduire la liste des jeux ET les équipes disponibles d'un coup.
   useEffect(() => {
-    if (!selectedGame || !token) return;
+    if (!token) return;
+
+    const fetchAllTeams = async () => {
+      try {
+        // On demande une grosse limite pour avoir beaucoup d'équipes pour récupérer les jeux
+        const response = await fetch(
+          "http://localhost:5000/api/admin/teams?limit=200",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error("Erreur fetch équipes :", data.message || data);
+          return;
+        }
+
+        const teamsList = data.teams || [];
+        setAllTeams(teamsList);
+
+        // Extraction des jeux uniques
+        const uniqueGames = [...new Set(teamsList.map((team) => team.game))];
+        setGames(uniqueGames);
+      } catch (error) {
+        console.error("Erreur réseau :", error);
+      }
+    };
+
+    fetchAllTeams();
+  }, [token]);
+
+  useEffect(() => {
+    if (!selectedGame) {
+      setTeamsForSelectedGame([]);
+      setTournaments([]);
+      return;
+    }
+
+    //Filtrage local des équipes (Pas besoin de refetch !)
+    const filtered = allTeams.filter((t) => t.game === selectedGame);
+    setTeamsForSelectedGame(filtered);
 
     const fetchTournaments = async () => {
       try {
@@ -73,79 +113,17 @@ function NewMatch() {
             selectedGame
           )}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
         const data = await res.json();
         if (res.ok) setTournaments(data || []);
-        else console.error("Erreur chargement tournois :", data);
       } catch (err) {
-        console.error("Erreur réseau :", err);
+        console.error("Erreur réseau tournois :", err);
       }
     };
-
     fetchTournaments();
-  }, [selectedGame, token]);
-
-  // Charger la liste des jeux disponibles à partir des équipes
-  useEffect(() => {
-    if (!token) return;
-
-    const fetchGames = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/admin/teams", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          console.error("4. Erreur fetch équipes :", data.message || data);
-          return;
-        }
-        const uniqueGames = [...new Set((data || []).map((team) => team.game))];
-
-        setGames(uniqueGames);
-      } catch (error) {
-        console.error("5. Échec du FETCH ou du JSON.parse (catch) :", error); // 👈 Point E
-      }
-    };
-
-    fetchGames();
-  }, [token]);
-
-  // Charger les équipes correspondant au jeu sélectionné
-  useEffect(() => {
-    if (!selectedGame || !token) return;
-
-    const fetchTeams = async () => {
-      try {
-        console.log("1. Début du fetch /api/admin/teams");
-        const response = await fetch("http://localhost:5000/api/admin/teams", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          const filteredTeams = data.filter(
-            (team) => team.game === selectedGame
-          );
-          setTeams(filteredTeams);
-        }
-      } catch (error) {
-        console.error("Erreur réseau :", error);
-      }
-    };
-
-    fetchTeams();
-  }, [selectedGame, token]);
+  }, [selectedGame, allTeams, token]);
 
   // Soumission du formulaire match
   const onSubmit = async (formData) => {
@@ -162,7 +140,8 @@ function NewMatch() {
         oddsAway: parseFloat(formData.oddsAway),
         tournamentId: selectedTournament ? parseInt(selectedTournament) : null,
       };
-      console.log("Payload corrigé envoyé :", payload);
+
+      console.log("Payload envoyé :", payload);
 
       const response = await fetch(
         "http://localhost:5000/api/matches/create/match",
@@ -176,35 +155,26 @@ function NewMatch() {
         }
       );
 
-      // ✅ LIRE LE CORPS UNE SEULE FOIS, QUEL QUE SOIT LE STATUT !
-      // Si le body-parser du Back-end a échoué (très rare), response.json() peut planter
-      // Pour être sûr, on utilise text() puis JSON.parse().
       const responseText = await response.text();
       const data = responseText ? JSON.parse(responseText) : {};
 
       if (!response.ok) {
-        // Maintenant, 'data' est déjà le corps JSON, car il a été lu au-dessus
-
         if (data.errors && Array.isArray(data.errors)) {
           const errorMessages = data.errors
             .map((err) => `[${err.field}] : ${err.message}`)
             .join("\n");
-
-          console.error("Erreurs de validation (du serveur) :", data.errors);
           setMessage(errorMessages);
         } else {
-          console.error("Erreur serveur non formatée :", data.message || data);
           setMessage(data.message || "Erreur inconnue lors de la création.");
         }
         return;
       }
 
-      // Si response.ok est VRAI (Succès 200/201)
       setMessage("Match créé avec succès !");
-      setTimeout(() => navigate("/matchs"), 1500);
+      setTimeout(() => navigate("/admin/gestion-match"), 1500);
     } catch (error) {
-      console.error("Erreur réseau ou JSON.parse :", error);
-      setMessage("Erreur de connexion ou de traitement des données.");
+      console.error("Erreur réseau :", error);
+      setMessage("Erreur de connexion.");
     }
   };
 
@@ -225,11 +195,12 @@ function NewMatch() {
       options: games.map((g) => ({ value: g, label: g })),
       onChange: (e) => setSelectedGame(e.target.value),
     },
+    // On affiche la suite seulement si un jeu est sélectionné
     ...(selectedGame
       ? [
           {
             name: "tournamentId",
-            label: "Tournoi",
+            label: "Tournoi (Optionnel)",
             type: "select",
             options: tournaments.map((t) => ({
               value: t.id,
@@ -241,13 +212,13 @@ function NewMatch() {
             name: "phase",
             label: "Phase du tournoi",
             type: "text",
-            placeholder: "Ex: Phase de groupes, Quart de finale...",
+            placeholder: "Ex: Finale",
           },
           {
             name: "homeTeamId",
             label: "Équipe à domicile",
             type: "select",
-            options: teams.map((team) => ({
+            options: teamsForSelectedGame.map((team) => ({
               value: team.id,
               label: team.teamName,
             })),
@@ -257,7 +228,8 @@ function NewMatch() {
             name: "awayTeamId",
             label: "Équipe à l'extérieur",
             type: "select",
-            options: teams
+            // On filtre pour ne pas pouvoir sélectionner la même équipe qu'à domicile
+            options: teamsForSelectedGame
               .filter((team) => team.id !== parseInt(selectedHomeTeam))
               .map((team) => ({
                 value: team.id,
@@ -266,18 +238,19 @@ function NewMatch() {
           },
           {
             name: "oddsHome",
-            label: "Cote équipe domicile",
+            label: "Cote Domicile",
             type: "number",
             step: "0.01",
           },
           {
             name: "oddsDraw",
-            label: "Cote match nul",
-            type: "decimal",
+            label: "Cote Nul",
+            type: "number",
+            step: "0.01",
           },
           {
             name: "oddsAway",
-            label: "Cote équipe extérieure",
+            label: "Cote Extérieur",
             type: "number",
             step: "0.01",
           },
@@ -297,9 +270,8 @@ function NewMatch() {
         subtitle="Choisis d’abord le jeu, puis les équipes correspondantes."
       >
         {games.length === 0 ? (
-          <p className="text-red-600">
-            ⚠️ Aucun jeu disponible. Créez d’abord des équipes (elles doivent
-            être liées à un jeu).
+          <p className="text-red-600 text-center">
+            ⚠️ Aucun jeu disponible. Créez d’abord des équipes.
           </p>
         ) : (
           <Form
@@ -311,7 +283,7 @@ function NewMatch() {
           />
         )}
         {message && (
-          <p className="text-purple-600 my-2 text-center whitespace-pre-line">
+          <p className="text-purple-600 mt-4 text-center whitespace-pre-line bg-purple-50 p-2 rounded">
             {message}
           </p>
         )}

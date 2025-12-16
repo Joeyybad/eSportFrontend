@@ -11,12 +11,17 @@ function Home() {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/matches", {
-          headers: { "Content-Type": "application/json" },
-        });
+        const response = await fetch(
+          "http://localhost:5000/api/matches?limit=20",
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
 
         const data = await response.json();
-        if (response.ok) setMatches(data);
+        if (response.ok) {
+          setMatches(data.matches || []);
+        }
       } catch (error) {
         console.error("Erreur réseau :", error);
       } finally {
@@ -29,9 +34,11 @@ function Home() {
 
   if (loading) return <p className="text-purple-600">Chargement...</p>;
 
+  const safeMatches = Array.isArray(matches) ? matches : [];
+
   //Séparation des matchs selon le statut
-  const liveMatches = matches.filter((m) => m.status === "live");
-  const scheduledMatches = matches.filter((m) => m.status === "scheduled");
+  const liveMatches = safeMatches.filter((m) => m.status === "live");
+  const scheduledMatches = safeMatches.filter((m) => m.status === "scheduled");
 
   return (
     <>
