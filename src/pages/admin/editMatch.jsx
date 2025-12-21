@@ -22,9 +22,29 @@ const matchSchema = yup.object({
     .string()
     .oneOf(["scheduled", "live", "completed", "cancelled"])
     .required("Statut requis"),
-  oddsHome: yup.number().positive().required(),
-  oddsDraw: yup.number().positive().required(),
-  oddsAway: yup.number().positive().required(),
+  oddsHome: yup
+    .number()
+    .typeError("La cote doit être un nombre") // Gère si on tape du texte
+    .min(1.01, "La cote doit être supérieure à 1") // Plus logique que positive()
+    .required("Cote domicile requise"),
+
+  oddsDraw: yup
+    .number()
+    .typeError("La cote doit être un nombre")
+    .min(0, "La cote ne peut pas être négative")
+    // Optionnel : Une règle custom pour dire "Soit 0, soit > 1.01"
+    .test(
+      "is-valid-odd",
+      "La cote doit être 0 (impossible) ou supérieure à 1.01",
+      (val) => val === 0 || val >= 1.01
+    )
+    .required("Cote nul requise (mettre 0 si impossible)"),
+
+  oddsAway: yup
+    .number()
+    .typeError("La cote doit être un nombre")
+    .min(1.01, "La cote doit être supérieure à 1")
+    .required("Cote extérieur requise"),
 });
 
 // Validation Yup pour le résultat final
@@ -257,6 +277,13 @@ function EditMatch() {
         )}
       </Card>
 
+      <Link
+        to="/admin/gestion-match"
+        className="block mt-4 text-purple-600 hover:underline"
+      >
+        ← Retour gestion des matchs
+      </Link>
+
       <Card title="Déclarer le résultat final">
         <Form
           fields={resultFields}
@@ -268,13 +295,6 @@ function EditMatch() {
           <p className="text-purple-600 mt-2 text-center">{resultMessage}</p>
         )}
       </Card>
-
-      <Link
-        to="/admin/gestion-match"
-        className="block mt-4 text-purple-600 hover:underline"
-      >
-        ← Retour gestion des matchs
-      </Link>
     </div>
   );
 }

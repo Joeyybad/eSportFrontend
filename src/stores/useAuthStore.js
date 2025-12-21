@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { jwtDecode } from "jwt-decode"; //
 
 const initialState = {
   isLoggedIn: false,
@@ -11,13 +12,11 @@ const initialState = {
 };
 
 export const useAuthStore = create(
-  // Le middleware 'persist' permet de lire et d'écrire dans le localStorage
   persist(
-    (set) => ({
-      // État initial
+    (set, get) => ({
+      // 👈 Ajoute 'get' ici pour lire l'état actuel
       ...initialState,
 
-      // Fonction de connexion
       login: (userData) => {
         set({
           isLoggedIn: true,
@@ -28,9 +27,9 @@ export const useAuthStore = create(
           role: userData.user.isAdmin ? "admin" : "user",
         });
       },
+
       setUserProfile: (profileData) => {
         set((state) => ({
-          // Ne met à jour que les champs fournis
           username:
             profileData.username !== undefined
               ? profileData.username
@@ -42,11 +41,39 @@ export const useAuthStore = create(
 
       logout: () => {
         set(initialState);
+        localStorage.removeItem("auth-storage"); // Nettoyage explicite
+      },
+
+      checkAuth: () => {
+        const token = get().token;
+
+        if (!token) return;
+
+        try {
+          const decoded = jwtDecode(token);
+          const currentTime = Date.now() / 1000; // En secondes
+
+          // Si le token expire dans le passé (ou très bientôt)
+          if (decoded.exp < currentTime) {
+            console.log("Session expirée détectée au démarrage.");
+            get().logout(); // On déconnecte
+          } else {
+            console.log("Session valide.");
+          }
+        } catch (error) {
+          // Si le token est corrompu
+          console.error("Token invalide détecté :", error);
+          get().logout();
+        }
       },
     }),
     {
-      name: "auth-storage", // Nom de la clé dans le localStorage
+      name: "auth-storage",
       storage: createJSONStorage(() => localStorage),
+      // Optionnel : On peut lancer la vérif dès que le storage est chargé
+      onRehydrateStorage: () => (state) => {
+        state?.checkAuth();
+      },
     }
   )
 );

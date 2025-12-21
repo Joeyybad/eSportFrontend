@@ -30,7 +30,14 @@ const schema = yup.object({
   oddsDraw: yup
     .number()
     .typeError("La cote doit être un nombre")
-    .required("Cote match nul requise"),
+    .min(0, "La cote ne peut pas être négative")
+    // Optionnel : Une règle custom pour dire "Soit 0, soit > 1.01"
+    .test(
+      "is-valid-odd",
+      "La cote doit être 0 (impossible) ou supérieure à 1.01",
+      (val) => val === 0 || val >= 1.01
+    )
+    .required("Cote nul requise (mettre 0 si impossible)"),
   oddsAway: yup
     .number()
     .typeError("La cote doit être un nombre")

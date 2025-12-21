@@ -49,40 +49,46 @@ function MyBets() {
     <div className="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6">
       <h1 className="sr-only">Mes paris</h1>
 
-      {bets.map((bet) => (
-        <Card
-          key={bet.id}
-          title={`${bet.Match.homeTeam.teamName} vs ${bet.Match.awayTeam.teamName}`}
-          subtitle={`Date : ${new Date(bet.Match.date).toLocaleString("fr-FR", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-          })} | Cote : ${bet.odds}`}
-          centerHeader={false}
-        >
-          <div className="flex items-center justify-between mt-2">
-            <p>
-              <span className="font-semibold">Mon choix :</span>{" "}
-              {bet.prediction === "home"
-                ? bet.Match.homeTeam.teamName
-                : bet.prediction === "away"
-                ? bet.Match.awayTeam.teamName
-                : "Match nul"}
-            </p>
+      {bets.map((bet) => {
+        if (!bet.Match) return null;
+        return (
+          <Card
+            key={bet.id}
+            title={`${bet.Match.homeTeam.teamName} vs ${bet.Match.awayTeam.teamName}`}
+            subtitle={`Date : ${new Date(bet.Match.date).toLocaleString(
+              "fr-FR",
+              {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              }
+            )} | Cote : ${bet.odds}`}
+            centerHeader={false}
+          >
+            <div className="flex items-center justify-between mt-2">
+              <p>
+                <span className="font-semibold">Mon choix :</span>{" "}
+                {bet.prediction === "home"
+                  ? bet.Match.homeTeam.teamName
+                  : bet.prediction === "away"
+                  ? bet.Match.awayTeam.teamName
+                  : "Match nul"}
+              </p>
 
-            {/* Résultat du pari si le match est terminé */}
-            {bet.status === "won" ? (
-              <Check className="w-6 h-6 text-green-500" />
-            ) : bet.status === "lost" ? (
-              <X className="w-6 h-6 text-red-500" />
-            ) : (
-              <p className="text-gray-500 text-sm">En attente…</p>
-            )}
-          </div>
-        </Card>
-      ))}
+              {/* Résultat du pari si le match est terminé */}
+              {bet.status === "won" ? (
+                <Check className="w-6 h-6 text-green-500" />
+              ) : bet.status === "lost" ? (
+                <X className="w-6 h-6 text-red-500" />
+              ) : (
+                <p className="text-gray-500 text-sm">En attente…</p>
+              )}
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }

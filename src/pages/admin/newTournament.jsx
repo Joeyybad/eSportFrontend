@@ -45,13 +45,23 @@ function NewTournament() {
 
         const data = await response.json();
 
+        console.log("Données reçues de l'API Teams :", data);
+
         if (!response.ok) {
           console.error("Erreur lors du chargement des équipes :", data);
           return;
         }
+        const teamsList = Array.isArray(data)
+          ? data
+          : data.teams || data.data || [];
 
-        // Récupérer les jeux uniques
-        const uniqueGames = [...new Set((data || []).map((team) => team.game))];
+        if (!Array.isArray(teamsList)) {
+          console.error("Format de données inattendu (pas un tableau)");
+          return;
+        }
+
+        // Récupérer les jeux uniques sur la liste sécurisée
+        const uniqueGames = [...new Set(teamsList.map((team) => team.game))];
         setGames(uniqueGames);
       } catch (error) {
         console.error("Erreur réseau :", error);
