@@ -57,8 +57,8 @@ function Tournament() {
       >
         <div className="text-sm text-gray-600 mt-2">
           <p>
-            <strong>Date :</strong>{" "}
-            {new Date(tournament.startDate).toLocaleDateString()} —{" "}
+            <strong>Date :</strong>
+            {new Date(tournament.startDate).toLocaleDateString()} —
             {new Date(tournament.endDate).toLocaleDateString()}
           </p>
           <p>
@@ -87,7 +87,7 @@ function Tournament() {
                 <img
                   src={`http://localhost:5000/uploads/${match.homeTeam.logo}`}
                   alt=""
-                  className="w-14 h-14 md:w-16 md:h-16 object-contain rounded"
+                  className="w-14 h-14 md:w-16 md:h-16 object-contain rounded bg-gray-600/20"
                 />
                 <span className="font-semibold">{match.homeTeam.teamName}</span>
               </div>
@@ -99,7 +99,7 @@ function Tournament() {
                 <img
                   src={`http://localhost:5000/uploads/${match.awayTeam.logo}`}
                   alt=""
-                  className="w-14 h-14 md:w-16 md:h-16 object-contain rounded"
+                  className="w-14 h-14 md:w-16 md:h-16 object-contain rounded bg-gray-600/20"
                 />
                 <span className="font-semibold">{match.awayTeam.teamName}</span>
               </div>

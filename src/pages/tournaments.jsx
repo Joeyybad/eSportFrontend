@@ -39,7 +39,14 @@ function Tournaments() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-center mb-4">Tournois</h1>
+      <div className="text-center mb-10">
+        <h1 className="text-4xl md:text-5xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)] flex items-center justify-center gap-4">
+          Tournois
+        </h1>
+        <p className="text-gray-400 mt-4 text-lg">
+          Tous les tournois disponibles
+        </p>
+      </div>
 
       {tournaments.map((t) => (
         <Card

@@ -56,46 +56,72 @@ function Matchs() {
   });
   return (
     <>
-      <h1 className="text-2xl font-bold text-center mb-6">Matchs</h1>
+      <div className="text-center mb-10">
+        <h1 className="text-4xl md:text-5xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)] flex items-center justify-center gap-4">
+          Matchs
+        </h1>
+        <p className="text-gray-400 mt-4 text-lg">
+          Tous les matchs disponibles
+        </p>
+      </div>
 
       <div className="max-w-4xl mx-auto px-4 flex flex-col gap-6">
         {Array.isArray(matches) &&
           sorted.map((match) => (
             <Card
               key={match.id}
+              // On ajoute l'effet glow bleu ou vert selon le statut, optionnel mais cool
+              glow={match.status === "live" ? "green" : "purple"}
+              className="hover:scale-[1.02] transition-transform duration-300" // Petit effet zoom au survol
               title={
-                <div className="flex items-center justify-center gap-3">
+                <div className="flex items-center justify-center gap-4 md:gap-6">
+                  {/* LOGO HOME : Encadré dans un fond clair pour la visibilité */}
                   {match.homeTeam?.logo && (
-                    <img
-                      src={`http://localhost:5000/uploads/${match.homeTeam.logo}`}
-                      className="w-14 h-14 md:w-16 md:h-16 object-contain rounded"
-                    />
+                    <div className="bg-gray-200/20 p-2 rounded-lg shadow-[0_0_10px_rgba(255,255,255,0.1)] backdrop-blur-sm">
+                      <img
+                        src={`http://localhost:5000/uploads/${match.homeTeam.logo}`}
+                        alt={match.homeTeam.teamName}
+                        className="w-12 h-12 md:w-16 md:h-16 object-contain"
+                      />
+                    </div>
                   )}
 
-                  <span
-                    className="font-semibold text-lg cursor-pointer hover:text-purple-600"
+                  {/* NOMS DES ÉQUIPES */}
+                  <div
+                    className="flex flex-col items-center cursor-pointer group"
                     onClick={() => navigate(`/match/${match.id}`)}
                   >
-                    {match.homeTeam.teamName} vs {match.awayTeam.teamName}
-                  </span>
+                    <span className="font-black text-xl md:text-2xl text-white group-hover:text-purple-400 transition-colors uppercase tracking-wider text-center leading-none">
+                      {match.homeTeam.teamName}
+                    </span>
+                    <span className="text-xs font-bold text-red-500 my-1">
+                      VS
+                    </span>
+                    <span className="font-black text-xl md:text-2xl text-white group-hover:text-purple-400 transition-colors uppercase tracking-wider text-center leading-none">
+                      {match.awayTeam.teamName}
+                    </span>
+                  </div>
 
+                  {/* LOGO AWAY : Encadré aussi */}
                   {match.awayTeam?.logo && (
-                    <img
-                      src={`http://localhost:5000/uploads/${match.awayTeam.logo}`}
-                      className="w-14 h-14"
-                    />
+                    <div className="bg-gray-200/20 p-2 rounded-lg shadow-[0_0_10px_rgba(255,255,255,0.1)] backdrop-blur-sm">
+                      <img
+                        src={`http://localhost:5000/uploads/${match.awayTeam.logo}`}
+                        alt={match.awayTeam.teamName}
+                        className="w-12 h-12 md:w-16 md:h-16 object-contain"
+                      />
+                    </div>
                   )}
                 </div>
               }
               subtitle={
-                <div className="flex flex-col items-center gap-1">
+                <div className="flex flex-col items-center gap-2 mt-4 border-t border-white/10 pt-3">
                   <StatusBadge status={match.status} />
-                  <span>
-                    le
+                  <span className="text-gray-400 text-sm font-medium flex items-center gap-1">
+                    📅
                     {new Date(match.date).toLocaleString("fr-FR", {
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
+                      day: "numeric",
+                      month: "long",
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
@@ -103,9 +129,14 @@ function Matchs() {
                 </div>
               }
             >
-              <div className="flex gap-3 justify-center">
-                <Link to={`/match/${match.id}`}>
-                  <Button text="Voir le match" color="white" />
+              {/* LE BOUTON : Style "Néon" Violet */}
+              <div className="flex gap-3 justify-center mt-4">
+                <Link to={`/match/${match.id}`} className="w-full sm:w-auto">
+                  <Button
+                    text="VOIR LE MATCH"
+                    // On enlève color="white" et on utilise className pour le style Dark E-sport
+                    className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-8 rounded-lg shadow-[0_0_15px_rgba(147,51,234,0.4)] hover:shadow-[0_0_25px_rgba(147,51,234,0.6)] transform transition-all hover:-translate-y-0.5 border border-purple-400/30"
+                  />
                 </Link>
               </div>
             </Card>
